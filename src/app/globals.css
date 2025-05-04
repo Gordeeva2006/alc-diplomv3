@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+:root {
+  --color-accent: #C09D6A;
+  --color-dark: #202025;
+  --color-gray: #6e6e6e;
+  --color-white: #fff;
+  --color-black: #000;
+  --color-error: #941a1f;
+}
+@font-face {
+  font-family: "Bounded";
+  src: url("/fonts/Bounded-Variable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+.Bounded {
+  font-family: 'Bounded';
+}
+.max {
+  padding: 0px 20px;
+  max-width: 1640px;
+  margin: 0px auto;
+}
+.mx-auto-c {
+  margin: 0px auto;
+}
+.grid {
+  gap: 30px;
+  display: grid;
+  grid-template-columns: 1fr 200px 1fr;
+  align-items: center;
+}
+
+body {
+  color: var(--color-dark);
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  padding-top: 0 !important;
+  line-height: 1;
+  background: #2C2C31;
+  font-size: 16px;
+  -webkit-text-size-adjust: none;
+  -webkit-font-smoothing: antialiased;
+  overflow-y: overlay;
+  font-weight: 400;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.input-error {
+  border-color: var(--color-error);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+
+.header-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+/* Добавьте в app/globals.css */
+main {
+  background: 
+    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url('/bg.webp') fixed center/cover;
+  background-attachment: fixed;
+  background-position: center;
+  background-size: cover;
+}
+
+@layer components {
+  .header-link {
+    @apply text-blue-600 hover:text-blue-700 transition-colors duration-200;
+  }
+}
+
+.bg-accent { background-color: var(--color-accent); }
+.text-accent { color: var(--color-accent); }
+
+.bg-dark { background-color: var(--color-dark); color: white; }
+.text-dark { color: var(--color-dark); }
+
+.text-gray { color: var(--color-gray); }
+.border-gray { border-color: var(--color-gray); }
+
+.text-error { color: var(--color-error); }
+.bg-error { background-color: var(--color-error); }
