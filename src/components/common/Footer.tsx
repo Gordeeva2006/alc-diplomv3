@@ -8,6 +8,7 @@ import alc from '@/images/alc-logo.svg'
 const Footer = () => {
   return (
     <div>
+      <div></div>
       <footer className="p-6 bg-dark text-white border-t-2 border-[var(--color-accent)] sm:" aria-labelledby="footer-heading">
         <div className="max-w-7xl mx-auto">
           <nav
@@ -69,7 +70,7 @@ const Footer = () => {
           </nav>
         </div>
      </footer>
-      <div className="p-2 bg-black flex justify-between">
+      <div className="p-2 bg-black flex justify-between ">
         <p className="text-left text-xs md:text-sm font-extralight text-white container mx-auto Bounded  ">
           Разработано DAIMON
         </p>

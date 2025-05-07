@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Header from '@/components/common/Header';
-import Footer from '@/components/common/Footer'
+import Footer from '@/components/common/Footer';
+import AdminHeader from '../AdminHeader';
 
 interface Order {
   id: number;
@@ -23,8 +24,14 @@ interface Order {
   certificate_file?: string;
 }
 
+interface Status {
+  id: number;
+  name: string;
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [statuses, setStatuses] = useState<Status[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
@@ -36,6 +43,17 @@ export default function OrdersPage() {
   const [newCertificates, setNewCertificates] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Загрузка статусов
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      const res = await fetch('/api/admin/statuses');
+      const data = await res.json();
+      setStatuses(data || []);
+    };
+    fetchStatuses();
+  }, []);
+
+  // Загрузка заказов
   useEffect(() => {
     const fetchOrders = async () => {
       const url = new URL('/api/admin/orders', window.location.origin);
@@ -53,7 +71,7 @@ export default function OrdersPage() {
 
   const getClientInfo = (order: Order) => {
     const common = (
-      <div className="text-[var(--color-white)]">
+      <div className="text-white">
         <div><strong>Email:</strong> {order.client_email}</div>
         <div><strong>Телефон:</strong> {order.client_phone || 'Не указан'}</div>
         <div><strong>Юр. адрес:</strong> {order.legal_address}</div>
@@ -106,6 +124,7 @@ export default function OrdersPage() {
     newCertificates.forEach(file => {
       formData.append('certificate_file', file);
     });
+
     try {
       const res = await fetch('/api/admin/orders', {
         method: 'PUT',
@@ -147,176 +166,175 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="bg-[var(--color-dark)] text-[var(--color-white)] min-h-screen">
-      <Header />
-      <div className='max-w-7xl mx-auto py-12 px-4 min-h-screen'>
-        <div className="mb-8 flex flex-col sm:flex-row gap-4">
-          <input
-            type="text"
-            placeholder="Поиск..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-          >
-            {/* Загрузите статусы через /api/admin/statuses */}
-            <option value="">Все статусы</option>
-            {/* Пример: <option value="1">Новый</option> */}
-          </select>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-[var(--color-dark)] border border-[var(--color-gray)]">
-            <thead>
-              <tr className="bg-[var(--color-gray)]">
-                <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">ID</th>
-                <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Клиент</th>
-                <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Сумма</th>
-                <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Статус</th>
-                <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Дата</th>
-                <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.length > 0 ? (
-                orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-[var(--color-dark)] transition-colors">
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">{order.id}</td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">
-                      <div className="space-y-1">
-                        {getClientInfo(order)}
-                      </div>
-                    </td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">{order.total_amount}</td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">{order.status_name}</td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">
-                      {new Date(order.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3 text-center">
-                      <button
-                        onClick={() => handleEditOrder(order)}
-                        className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity"
-                      >
-                        Редактировать
-                      </button>
+    <div className="bg-[var(--color-dark)] text-white flex flex-col min-h-screen">
+      <main className='flex-grow'>
+          <AdminHeader />
+        <div className='max-w-7xl mx-auto py-12 px-4'>
+          <div className="mb-8 flex flex-col sm:flex-row gap-4">
+            <input
+              type="text"
+              placeholder="Поиск..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="px-4 py-2 border rounded bg-[var(--color-dark)] text-white border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border rounded bg-[var(--color-dark)] text-white border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            >
+              <option value="">Все статусы</option>
+              {statuses.map(status => (
+                <option key={status.id} value={status.id}>
+                  {status.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-[var(--color-dark)] border border-[var(--color-gray)]">
+              <thead>
+                <tr className="bg-[var(--color-gray)]">
+                  <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">ID</th>
+                  <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Клиент</th>
+                  <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Сумма</th>
+                  <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Статус</th>
+                  <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Дата</th>
+                  <th className="py-3 px-4 border-b border-[var(--color-gray)] text-left">Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.length > 0 ? (
+                  orders.map((order) => (
+                    <tr key={order.id} className="hover:bg-[var(--color-dark)] transition-colors">
+                      <td className="border-b border-[var(--color-gray)] px-4 py-3">{order.id}</td>
+                      <td className="border-b border-[var(--color-gray)] px-4 py-3">
+                        <div className="space-y-1">
+                          {getClientInfo(order)}
+                        </div>
+                      </td>
+                      <td className="border-b border-[var(--color-gray)] px-4 py-3">{order.total_amount}</td>
+                      <td className="border-b border-[var(--color-gray)] px-4 py-3">{order.status_name}</td>
+                      <td className="border-b border-[var(--color-gray)] px-4 py-3">
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="border-b border-[var(--color-gray)] px-4 py-3 text-center">
+                        <button
+                          onClick={() => handleEditOrder(order)}
+                          className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity"
+                        >
+                          Редактировать
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="text-center py-6 border-b border-[var(--color-gray)]">
+                      Нет данных
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="text-center py-6 border-b border-[var(--color-gray)]">
-                    Нет данных
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Предыдущая
-          </button>
-          
-          <span className="text-sm">
-            Страница {page} из {Math.ceil(total / pageSize)}
-          </span>
-          
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page * pageSize >= total}
-            className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Следующая
-          </button>
-        </div>
-      </div>
-      <Footer />
-
-      {/* Модальное окно редактирования */}
-      {editingOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
-          <div className="bg-[var(--color-dark)] p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4 text-[var(--color-accent)]">
-              Редактирование заказа #{editingOrder.id}
-            </h3>
-            
-            <div className="mb-4">
-              <label className="block mb-2 text-[var(--color-gray)]">Статус</label>
-              <select
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-              >
-                {/* Загрузите статусы из /api/admin/statuses */}
-              </select>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block mb-2 text-[var(--color-gray)]">Файл договора</label>
-              <input
-                type="file"
-                onChange={(e) => setNewContract(e.target.files?.[0] || null)}
-                className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-              />
-              {editingOrder.contract_file && (
-                <a
-                  href={`/uploads/contracts/${editingOrder.contract_file}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[var(--color-accent)] underline mt-2 block"
-                >
-                  Текущий договор: {editingOrder.contract_file}
-                </a>
-              )}
-            </div>
-            
-            <div className="mb-6">
-              <label className="block mb-2 text-[var(--color-gray)]">Загрузите сертификаты (PDF)</label>
-              <input
-                type="file"
-                multiple
-                accept="application/pdf"
-                onChange={handleCertificateChange}
-                className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-              />
-              {editingOrder.certificate_file && (
-                <div className="mt-2">
-                  <strong className="text-[var(--color-gray)]">Загруженные сертификаты:</strong>
-                  <div className="mt-1 space-y-1">
-                    {getCertificateLinks(editingOrder.certificate_file)}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setEditingOrder(null)}
-                disabled={loading}
-                className="px-4 py-2 bg-[var(--color-gray)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleSaveOrder}
-                disabled={loading}
-                className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {loading ? 'Сохранение...' : 'Сохранить'}
-              </button>
-            </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Предыдущая
+            </button>
+            <span className="text-sm">
+              Страница {page} из {Math.ceil(total / pageSize)}
+            </span>
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page * pageSize >= total}
+              className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Следующая
+            </button>
           </div>
         </div>
-      )}
+        {/* Модальное окно редактирования */}
+        {editingOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
+            <div className="bg-[var(--color-dark)] p-6 rounded-lg shadow-xl w-full max-w-md">
+              <h3 className="text-xl font-bold mb-4 text-[var(--color-accent)]">
+                Редактирование заказа #{editingOrder.id}
+              </h3>
+              <div className="mb-4">
+                <label className="block mb-2 text-[var(--color-gray)]">Статус</label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-white border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                >
+                  {statuses.map(status => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2 text-[var(--color-gray)]">Файл договора</label>
+                <input
+                  type="file"
+                  onChange={(e) => setNewContract(e.target.files?.[0] || null)}
+                  className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-white border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                />
+                {editingOrder.contract_file && (
+                  <a
+                    href={`/uploads/contracts/${editingOrder.contract_file}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--color-accent)] underline mt-2 block"
+                  >
+                    Текущий договор: {editingOrder.contract_file}
+                  </a>
+                )}
+              </div>
+              <div className="mb-6">
+                <label className="block mb-2 text-[var(--color-gray)]">Загрузите сертификаты (PDF)</label>
+                <input
+                  type="file"
+                  multiple
+                  accept="application/pdf"
+                  onChange={handleCertificateChange}
+                  className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-white border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                />
+                {editingOrder.certificate_file && (
+                  <div className="mt-2">
+                    <strong className="text-[var(--color-gray)]">Загруженные сертификаты:</strong>
+                    <div className="mt-1 space-y-1">
+                      {getCertificateLinks(editingOrder.certificate_file)}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setEditingOrder(null)}
+                  disabled={loading}
+                  className="px-4 py-2 bg-[var(--color-gray)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={handleSaveOrder}
+                  disabled={loading}
+                  className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {loading ? 'Сохранение...' : 'Сохранить'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

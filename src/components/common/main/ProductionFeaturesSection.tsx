@@ -32,7 +32,7 @@ const ProductionFeaturesSection = () => {
           >
             <div className="bg-[var(--color-accent)] p-3 rounded-lg shadow-md">
               {React.cloneElement(feature.icon, { 
-                className: "w-6 h-6 text-[var(--color-white)]" 
+                className: "w-6 h-6 text-white" 
               })}
             </div>
             <div>

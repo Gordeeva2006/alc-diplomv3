@@ -6,7 +6,7 @@ import Header from "@/components/common/Header"
 import Footer from "@/components/common/Footer"
 import { CartProvider } from "@/components/CartProvider"
 
-// Типы данных (остаются без изменений)
+// Типы данных
 interface IndividualData {
   inn?: string | null
   companyName?: string | null
@@ -39,9 +39,10 @@ export default function ProfilePage() {
   const { data: session, status, update } = useSession()
   const [saving, setSaving] = useState(false)
   const [passwordLoading, setPasswordLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({})
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({})
   
-  // Состояния формы (остаются без изменений)
+  // Состояния формы
   const [email, setEmail] = useState("")
   const [userPhone, setUserPhone] = useState("")
   const [clientPhone, setClientPhone] = useState("")
@@ -58,14 +59,19 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
 
-  // Загрузка данных из сессии (остается без изменений)
+  // Форматирование телефона (убираем лишние символы)
+  const formatPhoneForFrontend = (phone: string): string => {
+    return phone.replace(/\D/g, '')
+  }
+
+  // Загрузка данных из сессии
   useEffect(() => {
     if (status === "authenticated" && session?.user) {
       const userData = session.user as UserData
       setEmail(userData.email || "")
-      setUserPhone(userData.phone || "")
+      setUserPhone(formatPhoneForFrontend(userData.phone || ""))
       if (userData.client) {
-        setClientPhone(userData.client.phone || "")
+        setClientPhone(formatPhoneForFrontend(userData.client.phone || ""))
         setLegalAddress(userData.client.legalAddress || "")
         setClientType(userData.client.type)
         if (userData.client.type === "individual" && userData.client.individual) {
@@ -83,51 +89,82 @@ export default function ProfilePage() {
     }
   }, [status, session])
 
-  // Валидация полей (остается без изменений)
-  const validateFields = (): boolean => {
+  // Упрощённая валидация полей профиля
+  const validateProfileFields = (): boolean => {
     const newErrors: Record<string, string> = {}
+    
+    // Валидация email
     if (!email.trim()) newErrors.email = "Email обязателен"
-    if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Неверный формат email"
-    if (oldPassword || newPassword || confirmPassword) {
-      if (newPassword !== confirmPassword) {
-        newErrors.password = "Пароли не совпадают"
-      }
-      if (newPassword && newPassword.length < 8) {
-        newErrors.password = "Пароль должен быть не менее 8 символов"
-      }
+    else if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Неверный формат email"
+    
+    // Валидация юридического адреса
+    if (!legalAddress.trim()) {
+      newErrors.legalAddress = "Юридический адрес обязателен"
+    } else if (legalAddress.length < 5) {
+      newErrors.legalAddress = "Адрес должен содержать не менее 5 символов"
     }
+    
+    // Валидация данных по типу клиента
     if (clientType === "individual") {
-      if (indInn && indInn.length !== 12) {
-        newErrors.indInn = "ИНН должен содержать 12 цифр"
-      }
-      if (indOgrnip && indOgrnip.length !== 15) {
-        newErrors.indOgrnip = "ОГРНИП должен содержать 15 цифр"
-      }
+      // Проверка ИНН
+      if (!indInn) newErrors.indInn = "ИНН обязателен"
+      else if (!/^\d+$/.test(indInn)) newErrors.indInn = "ИНН должен содержать только цифры"
+      else if (indInn.length !== 12) newErrors.indInn = "ИНН должен содержать 12 цифр"
+      
+      // Проверка названия компании
+      if (!indCompany.trim()) newErrors.indCompany = "Название компании обязательна"
+      
+      // Проверка ОГРНИП
+      if (!indOgrnip) newErrors.indOgrnip = "ОГРНИП обязателен"
+      else if (!/^\d+$/.test(indOgrnip)) newErrors.indOgrnip = "ОГРНИП должен содержать только цифры"
+      else if (indOgrnip.length !== 15) newErrors.indOgrnip = "ОГРНИП должен содержать 15 цифр"
     } else if (clientType === "legal_entity") {
-      if (leInn && leInn.length !== 10) {
-        newErrors.leInn = "ИНН должен содержать 10 цифр"
-      }
-      if (leKpp && leKpp.length !== 9) {
-        newErrors.leKpp = "КПП должен содержать 9 цифр"
-      }
-      if (leOgrn && leOgrn.length !== 13) {
-        newErrors.leOgrn = "ОГРН должен содержать 13 цифр"
-      }
+      // Проверка ИНН
+      if (!leInn) newErrors.leInn = "ИНН обязателен"
+      else if (!/^\d+$/.test(leInn)) newErrors.leInn = "ИНН должен содержать только цифры"
+      else if (leInn.length !== 10) newErrors.leInn = "ИНН должен содержать 10 цифр"
+      
+      // Проверка названия компании
+      if (!leCompany.trim()) newErrors.leCompany = "Название компании обязательна"
+      
+      // Проверка КПП
+      if (!leKpp) newErrors.leKpp = "КПП обязателен"
+      else if (!/^\d+$/.test(leKpp)) newErrors.leKpp = "КПП должен содержать только цифры"
+      else if (leKpp.length !== 9) newErrors.leKpp = "КПП должен содержать 9 цифр"
+      
+      // Проверка ОГРН
+      if (!leOgrn) newErrors.leOgrn = "ОГРН обязателен"
+      else if (!/^\d+$/.test(leOgrn)) newErrors.leOgrn = "ОГРН должен содержать только цифры"
+      else if (leOgrn.length !== 13) newErrors.leOgrn = "ОГРН должен содержать 13 цифр"
     }
-    setErrors(newErrors)
+    
+    setProfileErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  // Сохранение профиля (остается без изменений)
-  const handleSave = async () => {
-    if (!validateFields()) return
+  // Валидация полей пароля
+  const validatePasswordFields = (): boolean => {
+    const newErrors: Record<string, string> = {}
+    if (!oldPassword) newErrors.oldPassword = "Старый пароль обязателен"
+    if (!newPassword) newErrors.newPassword = "Новый пароль обязателен"
+    if (newPassword && newPassword.length < 8) {
+      newErrors.newPassword = "Пароль должен быть не менее 8 символов"
+    }
+    if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = "Пароли не совпадают"
+    }
+    setPasswordErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  // Сохранение профиля
+  const handleSaveProfile = async () => {
+    if (!validateProfileFields()) return
     setSaving(true)
     try {
       const response = await fetch("/api/user/update", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
           phone: userPhone,
@@ -153,9 +190,13 @@ export default function ProfilePage() {
           }
         })
       })
-      if (!response.ok) throw new Error("Ошибка сохранения данных")
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (errorData.errors) setProfileErrors(errorData.errors)
+        throw new Error("Ошибка сохранения данных")
+      }
       await update()
-      alert("Данные успешно обновлены")
+      alert("Данные профиля успешно обновлены")
     } catch (error: any) {
       console.error("Ошибка сохранения:", error)
       alert(`Ошибка: ${error.message}`)
@@ -164,8 +205,9 @@ export default function ProfilePage() {
     }
   }
 
-  // Изменение пароля (остается без изменений)
+  // Изменение пароля
   const handleChangePassword = async () => {
+    if (!validatePasswordFields()) return
     if (!oldPassword || !newPassword || !confirmPassword) {
       alert("Заполните все поля")
       return
@@ -186,6 +228,7 @@ export default function ProfilePage() {
       setOldPassword("")
       setNewPassword("")
       setConfirmPassword("")
+      setPasswordErrors({})
     } catch (error: any) {
       alert(`Ошибка: ${error.message}`)
     } finally {
@@ -212,7 +255,6 @@ export default function ProfilePage() {
           <h2 className="text-2xl font-bold mb-8 text-[var(--color-accent)] border-b border-[var(--color-gray)] pb-4">
             Профиль пользователя
           </h2>
-
           {/* Основная информация */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
@@ -222,22 +264,25 @@ export default function ProfilePage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
-                  errors.email ? "border border-[var(--color-error)]" : ""
+                  profileErrors.email ? "border border-[var(--color-error)]" : ""
                 }`}
               />
-              {errors.email && <p className="text-[var(--color-error)] text-sm mt-1">{errors.email}</p>}
+              {profileErrors.email && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.email}</p>}
             </div>
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-300">Телефон пользователя</label>
               <input
                 type="tel"
                 value={userPhone}
+                maxLength={12}
                 onChange={(e) => setUserPhone(e.target.value)}
-                className="w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
+                  profileErrors.userPhone ? "border border-[var(--color-error)]" : ""
+                }`}
               />
+              {profileErrors.userPhone && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.userPhone}</p>}
             </div>
           </div>
-
           {/* Тип клиента */}
           <div className="mb-8">
             <label className="block mb-3 text-sm font-medium text-gray-300">Тип клиента</label>
@@ -246,8 +291,8 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => setClientType("individual")}
                 className={`px-6 py-3 rounded-lg transition-all duration-200 font-medium ${
-                  clientType === "individual" 
-                    ? "bg-[var(--color-accent)] text-[var(--color-dark)] shadow-md" 
+                  clientType === "individual"
+                    ? "bg-[var(--color-accent)] text-[var(--color-dark)] shadow-md"
                     : "bg-[var(--color-gray)] hover:bg-gray-600 text-white"
                 }`}
               >
@@ -257,8 +302,8 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => setClientType("legal_entity")}
                 className={`px-6 py-3 rounded-lg transition-all duration-200 font-medium ${
-                  clientType === "legal_entity" 
-                    ? "bg-[var(--color-accent)] text-[var(--color-dark)] shadow-md" 
+                  clientType === "legal_entity"
+                    ? "bg-[var(--color-accent)] text-[var(--color-dark)] shadow-md"
                     : "bg-[var(--color-gray)] hover:bg-gray-600 text-white"
                 }`}
               >
@@ -266,7 +311,6 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
-
           {/* Общие данные клиента */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
@@ -274,9 +318,13 @@ export default function ProfilePage() {
               <input
                 type="tel"
                 value={clientPhone}
+                maxLength={12}
                 onChange={(e) => setClientPhone(e.target.value)}
-                className="w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
+                  profileErrors.clientPhone ? "border border-[var(--color-error)]" : ""
+                }`}
               />
+              {profileErrors.clientPhone && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.clientPhone}</p>}
             </div>
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-300">Юридический адрес</label>
@@ -284,11 +332,13 @@ export default function ProfilePage() {
                 type="text"
                 value={legalAddress}
                 onChange={(e) => setLegalAddress(e.target.value)}
-                className="w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
+                  profileErrors.legalAddress ? "border border-[var(--color-error)]" : ""
+                }`}
               />
+              {profileErrors.legalAddress && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.legalAddress}</p>}
             </div>
           </div>
-
           {/* Условные поля по типу клиента */}
           {clientType === "individual" ? (
             <>
@@ -298,22 +348,27 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={indInn}
-                    onChange={(e) => setIndInn(e.target.value)}
+                    onChange={(e) => setIndInn(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                    maxLength={12}
                     placeholder="12 цифр"
                     className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
-                      errors.indInn ? "border border-[var(--color-error)]" : ""
+                      profileErrors.indInn ? "border border-[var(--color-error)]" : ""
                     }`}
                   />
-                  {errors.indInn && <p className="text-[var(--color-error)] text-sm mt-1">{errors.indInn}</p>}
+                  {profileErrors.indInn && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.indInn}</p>}
                 </div>
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-300">Компания</label>
                   <input
                     type="text"
                     value={indCompany}
-                    onChange={(e) => setIndCompany(e.target.value)}
-                    className="w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                    onChange={(e) => setIndCompany(e.target.value.slice(0, 100))}
+                    maxLength={100}
+                    className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
+                      profileErrors.indCompany ? "border border-[var(--color-error)]" : ""
+                    }`}
                   />
+                  {profileErrors.indCompany && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.indCompany}</p>}
                 </div>
               </div>
               <div className="mb-8">
@@ -321,13 +376,14 @@ export default function ProfilePage() {
                 <input
                   type="text"
                   value={indOgrnip}
-                  onChange={(e) => setIndOgrnip(e.target.value)}
+                  onChange={(e) => setIndOgrnip(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                  maxLength={15}
                   placeholder="15 цифр"
                   className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
-                    errors.indOgrnip ? "border border-[var(--color-error)]" : ""
+                    profileErrors.indOgrnip ? "border border-[var(--color-error)]" : ""
                   }`}
                 />
-                {errors.indOgrnip && <p className="text-[var(--color-error)] text-sm mt-1">{errors.indOgrnip}</p>}
+                {profileErrors.indOgrnip && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.indOgrnip}</p>}
               </div>
             </>
           ) : (
@@ -338,22 +394,27 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={leInn}
-                    onChange={(e) => setLeInn(e.target.value)}
+                    onChange={(e) => setLeInn(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    maxLength={10}
                     placeholder="10 цифр"
                     className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
-                      errors.leInn ? "border border-[var(--color-error)]" : ""
+                      profileErrors.leInn ? "border border-[var(--color-error)]" : ""
                     }`}
                   />
-                  {errors.leInn && <p className="text-[var(--color-error)] text-sm mt-1">{errors.leInn}</p>}
+                  {profileErrors.leInn && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.leInn}</p>}
                 </div>
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-300">Компания</label>
                   <input
                     type="text"
                     value={leCompany}
-                    onChange={(e) => setLeCompany(e.target.value)}
-                    className="w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                    onChange={(e) => setLeCompany(e.target.value.slice(0, 100))}
+                    maxLength={100}
+                    className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
+                      profileErrors.leCompany ? "border border-[var(--color-error)]" : ""
+                    }`}
                   />
+                  {profileErrors.leCompany && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.leCompany}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -362,31 +423,32 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={leKpp}
-                    onChange={(e) => setLeKpp(e.target.value)}
+                    onChange={(e) => setLeKpp(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                    maxLength={9}
                     placeholder="9 цифр"
                     className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
-                      errors.leKpp ? "border border-[var(--color-error)]" : ""
+                      profileErrors.leKpp ? "border border-[var(--color-error)]" : ""
                     }`}
                   />
-                  {errors.leKpp && <p className="text-[var(--color-error)] text-sm mt-1">{errors.leKpp}</p>}
+                  {profileErrors.leKpp && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.leKpp}</p>}
                 </div>
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-300">ОГРН</label>
                   <input
                     type="text"
                     value={leOgrn}
-                    onChange={(e) => setLeOgrn(e.target.value)}
+                    onChange={(e) => setLeOgrn(e.target.value.replace(/\D/g, '').slice(0, 13))}
+                    maxLength={13}
                     placeholder="13 цифр"
                     className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
-                      errors.leOgrn ? "border border-[var(--color-error)]" : ""
+                      profileErrors.leOgrn ? "border border-[var(--color-error)]" : ""
                     }`}
                   />
-                  {errors.leOgrn && <p className="text-[var(--color-error)] text-sm mt-1">{errors.leOgrn}</p>}
+                  {profileErrors.leOgrn && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.leOgrn}</p>}
                 </div>
               </div>
             </>
           )}
-
           {/* Изменение пароля */}
           <div className="border-t border-[var(--color-gray)] pt-8 mt-8">
             <h3 className="font-bold mb-6 text-lg text-[var(--color-accent)]">Изменить пароль</h3>
@@ -396,30 +458,41 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                  className="w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                  onChange={(e) => setOldPassword(e.target.value.slice(0, 32))}
+                  maxLength={32}
+                  className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
+                    passwordErrors.oldPassword ? "border border-[var(--color-error)]" : ""
+                  }`}
                 />
+                {passwordErrors.oldPassword && <p className="text-[var(--color-error)] text-sm mt-1">{passwordErrors.oldPassword}</p>}
               </div>
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-300">Новый пароль</label>
                 <input
                   type="password"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                  onChange={(e) => setNewPassword(e.target.value.slice(0, 32))}
+                  maxLength={32}
+                  className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
+                    passwordErrors.newPassword ? "border border-[var(--color-error)]" : ""
+                  }`}
                 />
+                {passwordErrors.newPassword && <p className="text-[var(--color-error)] text-sm mt-1">{passwordErrors.newPassword}</p>}
               </div>
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-300">Подтвердите пароль</label>
                 <input
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all"
+                  onChange={(e) => setConfirmPassword(e.target.value.slice(0, 32))}
+                  maxLength={32}
+                  className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
+                    passwordErrors.confirmPassword ? "border border-[var(--color-error)]" : ""
+                  }`}
                 />
+                {passwordErrors.confirmPassword && <p className="text-[var(--color-error)] text-sm mt-1">{passwordErrors.confirmPassword}</p>}
               </div>
             </div>
-            {errors.password && <p className="text-[var(--color-error)] text-sm mb-6">{errors.password}</p>}
             <button
               onClick={handleChangePassword}
               disabled={passwordLoading}
@@ -428,11 +501,10 @@ export default function ProfilePage() {
               {passwordLoading ? "Сохранение..." : "Сохранить пароль"}
             </button>
           </div>
-
           {/* Кнопки управления */}
           <div className="mt-12 flex flex-wrap gap-4">
             <button
-              onClick={handleSave}
+              onClick={handleSaveProfile}
               disabled={saving}
               className="bg-[var(--color-accent)] hover:bg-opacity-90 text-[var(--color-dark)] px-8 py-3 rounded-lg font-medium flex-1 min-w-[160px] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >

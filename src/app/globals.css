@@ -26,12 +26,7 @@
 .mx-auto-c {
   margin: 0px auto;
 }
-.grid {
-  gap: 30px;
-  display: grid;
-  grid-template-columns: 1fr 200px 1fr;
-  align-items: center;
-}
+
 
 body {
   color: var(--color-dark);
@@ -45,12 +40,8 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-y: overlay;
   font-weight: 400;
-  user-select: none;
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
 }
+
 
 .input-error {
   border-color: var(--color-error);
@@ -73,7 +64,7 @@ body {
 }
 
 /* Добавьте в app/globals.css */
-main {
+main, .topo_bg {
   background: 
     linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
     url('/bg.webp') fixed center/cover;
@@ -90,6 +81,7 @@ main {
 
 .bg-accent { background-color: var(--color-accent); }
 .text-accent { color: var(--color-accent); }
+.border-accent { border-color: var(--color-accent); }
 
 .bg-dark { background-color: var(--color-dark); color: white; }
 .text-dark { color: var(--color-dark); }
@@ -99,3 +91,15 @@ main {
 
 .text-error { color: var(--color-error); }
 .bg-error { background-color: var(--color-error); }
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none; 
+}
+
+input[type='number'],
+input[type="number"]:hover,
+input[type="number"]:focus {
+    appearance: none;
+    -moz-appearance: textfield;
+}

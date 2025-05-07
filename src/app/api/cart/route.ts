@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
-import { pool } from "@/lib/db";
+import { pool } from '@/lib/db';
 
 // --- Типы ---
 export interface CartItem {
@@ -12,8 +12,6 @@ export interface CartItem {
 export interface CartState {
   items: CartItem[];
 }
-
-
 
 // --- Хелперы ---
 function getCartFromCookie(req: NextRequest): CartState {
@@ -57,8 +55,9 @@ export async function GET(req: NextRequest) {
     if (cart.items.length === 0) return NextResponse.json([], { status: 200 });
 
     const productIds = [...new Set(cart.items.map(item => item.productId))];
-    const [rows] = await pool.query(
-      `SELECT 
+
+    const [rows] = await pool.query(`
+      SELECT 
         p.id AS product_id,
         p.name AS product_name,
         p.description AS product_description,
@@ -66,10 +65,12 @@ export async function GET(req: NextRequest) {
         pt.id AS packaging_id,
         pt.name AS packaging_name,
         pt.volume AS packaging_volume,
-        pt.unit AS packaging_unit
+        u.name AS packaging_unit_name, -- Получаем название единицы измерения
+        pt.image AS packaging_image -- Получаем изображение упаковки
       FROM products p
       LEFT JOIN product_packaging pp ON p.id = pp.product_id
       LEFT JOIN packaging_types pt ON pp.packaging_type_id = pt.id
+      LEFT JOIN units u ON pt.unit = u.id -- Присоединяем таблицу units
       WHERE p.id IN (?)`,
       [productIds]
     );
@@ -82,17 +83,16 @@ export async function GET(req: NextRequest) {
            (row.packaging_id !== null && item.packagingId !== null && row.packaging_id === item.packagingId))
       );
 
-      // Расчёт unit_price: price_per_gram * объём упаковки (в граммах)
       let volumeInGrams = 0;
       if (matchingRow) {
         if (matchingRow.packaging_volume !== null) {
-          if (matchingRow.packaging_unit === 'kg') {
-            volumeInGrams = matchingRow.packaging_volume * 1000; // Конвертация кг → г
+          if (matchingRow.packaging_unit_name === 'кг') {
+            volumeInGrams = matchingRow.packaging_volume * 1000;
           } else {
-            volumeInGrams = matchingRow.packaging_volume; // Предполагается, что volume в граммах
+            volumeInGrams = matchingRow.packaging_volume;
           }
         } else {
-          volumeInGrams = 1; // Если объём не указан, считаем 1 грамм (price_per_gram = цена за грамм)
+          volumeInGrams = 1;
         }
       }
 
@@ -103,11 +103,12 @@ export async function GET(req: NextRequest) {
         packaging_type_id: item.packagingId ?? null,
         packaging_name: matchingRow?.packaging_name || null,
         volume: matchingRow?.packaging_volume || null,
-        unit: matchingRow?.packaging_unit || null,
+        unit_name: matchingRow?.packaging_unit_name || null,
         quantity: item.quantity,
         unit_price: matchingRow 
           ? parseFloat(matchingRow.price_per_gram) * volumeInGrams 
           : 0,
+        packaging_image: matchingRow?.packaging_image || null,
       };
     });
 
@@ -145,6 +146,7 @@ export async function POST(req: NextRequest) {
     if (packagingId !== undefined) {
       let query: string;
       let params: any[];
+      
       if (packagingId === null) {
         query = `
           SELECT 1 
@@ -160,6 +162,7 @@ export async function POST(req: NextRequest) {
         `;
         params = [productId, packagingId];
       }
+
       const [packagingRows] = await pool.query(query, params);
       if ((packagingRows as any[]).length === 0) {
         return NextResponse.json(
@@ -176,6 +179,7 @@ export async function POST(req: NextRequest) {
           ((item.packagingId === null && packagingId === null) ||
            (item.packagingId !== null && packagingId !== null && item.packagingId === packagingId))
       );
+
       if (existingItemIndex > -1) {
         cart.items[existingItemIndex].quantity += quantity;
       } else {
@@ -212,9 +216,11 @@ export async function PUT(req: NextRequest) {
           ((item.packagingId === null && packagingId === null) ||
            (item.packagingId !== null && packagingId !== null && item.packagingId === packagingId))
       );
+
       if (itemIndex === -1) {
         throw new Error('Товар не найден в корзине');
       }
+
       cart.items[itemIndex].quantity = quantity;
     });
   } catch (error) {
@@ -237,8 +243,8 @@ export async function DELETE(req: NextRequest) {
       cart.items = cart.items.filter(
         item =>
           !(item.productId === productId &&
-            ((item.packagingId === null && packagingId === null) ||
-             (item.packagingId !== null && packagingId !== null && item.packagingId === packagingId)))
+            ((item.packaging_type_id === null && packagingId === null) ||
+             (item.packaging_type_id !== null && packagingId !== null && item.packaging_type_id === packagingId)))
       );
     });
   } catch (error) {

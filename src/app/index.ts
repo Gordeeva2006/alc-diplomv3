@@ -2,17 +2,17 @@
 export const FOOTER_CONFIG = {
     leftColumn: [
       {
-        href: "https://arsenshop.ru/dostavka-oplata-vozvrat",
+        href: "/dostavka-oplata-vozvrat",
         text: "Доставка, оплата, возврат"
       },
       {
-        href: "https://arsenshop.ru/contacts",
+        href: "/contacts",
         text: "Контакты"
       }
     ],
     legal: [
       {
-        href: "/politika-konfidentsialnosti",
+        href: "/privacy",
         text: "Политика конфиденциальности"
       },
       {

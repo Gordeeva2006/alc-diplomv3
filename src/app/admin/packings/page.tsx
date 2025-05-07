@@ -1,37 +1,40 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import Header from '@/components/common/Header';
-import Footer from '@/components/common/Footer'
-
-
-interface Packaging {
-  id: number;
-  name: string;
-  material: string | null;
-  volume: number;
-  unit: string | null;
-  image: string | null;
-  form_type_name: string | null;
-}
-
-interface FormType {
-  id: number;
-  name: string;
-}
+import Footer from '@/components/common/Footer';
+import PackagingTable from './components/PackagingTable';
+import PackagingModal from './components/PackagingModal';
+import MaterialTable from './components/MaterialTable';
+import MaterialModal from './components/MaterialModal';
+import UnitTable from './components/UnitTable';
+import UnitModal from './components/UnitModal';
+import FormTypeTable from './components/FormTypeTable';
+import FormTypeModal from './components/FormTypeModal';
+import { Packaging, FormType, Material, Unit } from '@/app/admin/packings/types';
+import AdminHeader from '../AdminHeader';
 
 export default function PackingsPage() {
+  // Состояния
   const [packagings, setPackagings] = useState<Packaging[]>([]);
   const [formTypes, setFormTypes] = useState<FormType[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
   const [editingPacking, setEditingPacking] = useState<Packaging | null>(null);
+  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+  const [editingFormType, setEditingFormType] = useState<FormType | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Загрузка данных
   useEffect(() => {
     fetchData();
     fetchFormTypes();
+    fetchMaterials();
+    fetchUnits();
   }, []);
 
   const fetchData = async () => {
@@ -49,8 +52,7 @@ export default function PackingsPage() {
 
   const fetchFormTypes = async () => {
     try {
-      const res = await fetch('/api/admin/products?data=form_types');
-      if (!res.ok) throw new Error('Ошибка загрузки типов форм');
+      const res = await fetch('/api/admin/apiformtypes');
       const data = await res.json();
       setFormTypes(data);
     } catch (err) {
@@ -58,17 +60,41 @@ export default function PackingsPage() {
     }
   };
 
+  const fetchMaterials = async () => {
+    try {
+      const res = await fetch('/api/admin/materials');
+      const data = await res.json();
+      setMaterials(data);
+    } catch (err) {
+      console.error('Ошибка загрузки материалов:', err);
+    }
+  };
+
+  const fetchUnits = async () => {
+    try {
+      const res = await fetch('/api/admin/units');
+      const data = await res.json();
+      setUnits(data);
+    } catch (err) {
+      console.error('Ошибка загрузки единиц измерения:', err);
+    }
+  };
+
+  // Обработка изображения
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const files = 'dataTransfer' in e ? e.dataTransfer.files : e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith('image/')) {
-        setImageFile(file);
-        setImagePreview(URL.createObjectURL(file));
-      } else {
-        alert('Загрузите изображение');
+      
+      // Проверка формата файла
+      if (!file.type.startsWith('image/')) {
+        alert('Загрузите изображение в формате JPG, PNG или SVG');
+        return;
       }
+      
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -76,55 +102,288 @@ export default function PackingsPage() {
     fileInputRef.current?.click();
   };
 
+  // Валидация данных перед сохранением
+  const validatePacking = () => {
+    if (!editingPacking) return false;
+    
+    if (!editingPacking.name.trim()) {
+      alert('Введите название упаковки');
+      return false;
+    }
+    
+    if (!editingPacking.material_id) {
+      alert('Выберите материал');
+      return false;
+    }
+    
+    if (!editingPacking.unit_id) {
+      alert('Выберите единицу измерения');
+      return false;
+    }
+    
+    if (editingPacking.volume <= 0) {
+      alert('Объем должен быть больше нуля');
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSave = async () => {
+    if (!editingPacking || !validatePacking()) return;
+    
     try {
+      // Проверка существования связанных сущностей
+      const isValid = 
+        materials.some(m => m.id === editingPacking.material_id) &&
+        units.some(u => u.id === editingPacking.unit_id) &&
+        (!editingPacking.form_type_id || formTypes.some(ft => ft.id === editingPacking.form_type_id));
+      
+      if (!isValid) {
+        alert('Выбранные материал, единица измерения или тип формы недействительны');
+        return;
+      }
+
       const method = editingPacking?.id ? 'PUT' : 'POST';
       const url = editingPacking?.id 
         ? `/api/admin/packings?id=${editingPacking.id}` 
         : '/api/admin/packings';
+      
       const formData = new FormData();
-      formData.append('name', editingPacking!.name);
-      formData.append('material', editingPacking!.material || '');
-      formData.append('volume', editingPacking!.volume.toString());
-      formData.append('unit', editingPacking!.unit || '');
-      formData.append('form_type', (editingPacking!.form_type || '').toString());
+      formData.append('name', editingPacking.name);
+      formData.append('material', editingPacking.material_id?.toString() || '');
+      formData.append('volume', editingPacking.volume.toString());
+      formData.append('unit', editingPacking.unit_id?.toString() || '');
+      
+      if (editingPacking.form_type_id) {
+        formData.append('form_type', editingPacking.form_type_id.toString());
+      }
+      
       if (imageFile) {
         formData.append('image', imageFile);
       }
+
       const res = await fetch(url, {
         method,
         body: formData,
       });
-      if (!res.ok) throw new Error('Ошибка сохранения');
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Ошибка сохранения');
+      }
+
       fetchData();
       setEditingPacking(null);
       setImageFile(null);
       setImagePreview(null);
     } catch (error) {
       console.error('Ошибка сохранения упаковки:', error);
+      alert('Не удалось сохранить упаковку. Пожалуйста, попробуйте снова.');
     }
   };
 
+  // Сброс изображения при закрытии модального окна
+  useEffect(() => {
+    if (!editingPacking) {
+      setImagePreview(null);
+      setImageFile(null);
+    }
+  }, [editingPacking]);
+
+  // Удаление упаковки
   const handleDelete = async (id: number) => {
     if (!confirm('Вы уверены, что хотите удалить эту упаковку?')) return;
+    
     try {
       const res = await fetch(`/api/admin/packings?id=${id}`, {
         method: 'DELETE'
       });
-      if (!res.ok) throw new Error('Ошибка удаления');
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Ошибка удаления');
+      }
+      
       fetchData();
     } catch (error) {
       console.error('Ошибка удаления упаковки:', error);
+      alert('Не удалось удалить упаковку. Пожалуйста, попробуйте снова.');
+    }
+  };
+
+  // Обновление состояния при выборе материала
+  const handleMaterialChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value ? Number(e.target.value) : null;
+    const selectedMaterial = materials.find(m => m.id === selectedId);
+    
+    setEditingPacking({
+      ...editingPacking!,
+      material_id: selectedId,
+      material_name: selectedMaterial?.name || ''
+    });
+  };
+
+  // Обновление состояния при выборе единицы
+  const handleUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value ? Number(e.target.value) : null;
+    const selectedUnit = units.find(u => u.id === selectedId);
+    
+    setEditingPacking({
+      ...editingPacking!,
+      unit_id: selectedId,
+      unit_name: selectedUnit?.name || ''
+    });
+  };
+
+  // Обновление состояния при выборе типа формы
+  const handleFormTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = e.target.value ? Number(e.target.value) : null;
+    const selectedFormType = formTypes.find(ft => ft.id === selectedId);
+    
+    setEditingPacking({
+      ...editingPacking!,
+      form_type_id: selectedId,
+      form_type_name: selectedFormType?.name || ''
+    });
+  };
+
+  // CRUD для материалов
+  const handleSaveMaterial = async () => {
+    if (!editingMaterial) return;
+    
+    try {
+      const method = editingMaterial.id ? 'PUT' : 'POST';
+      const url = editingMaterial.id 
+        ? `/api/admin/materials?id=${editingMaterial.id}` 
+        : '/api/admin/materials';
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editingMaterial.name })
+      });
+      
+      if (!res.ok) throw new Error('Ошибка сохранения материала');
+      
+      fetchMaterials();
+      setEditingMaterial(null);
+    } catch (error) {
+      console.error('Ошибка сохранения материала:', error);
+      alert('Не удалось сохранить материал. Пожалуйста, попробуйте снова.');
+    }
+  };
+
+  const handleDeleteMaterial = async (id: number) => {
+    if (!confirm('Удалить материал?')) return;
+    
+    try {
+      const res = await fetch(`/api/admin/materials?id=${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!res.ok) throw new Error('Ошибка удаления материала');
+      
+      fetchMaterials();
+    } catch (error) {
+      console.error('Ошибка удаления материала:', error);
+      alert('Не удалось удалить материал. Пожалуйста, попробуйте снова.');
+    }
+  };
+
+  // CRUD для единиц измерения
+  const handleSaveUnit = async () => {
+    if (!editingUnit) return;
+    
+    try {
+      const method = editingUnit.id ? 'PUT' : 'POST';
+      const url = editingUnit.id 
+        ? `/api/admin/units?id=${editingUnit.id}` 
+        : '/api/admin/units';
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editingUnit.name })
+      });
+      
+      if (!res.ok) throw new Error('Ошибка сохранения единицы');
+      
+      fetchUnits();
+      setEditingUnit(null);
+    } catch (error) {
+      console.error('Ошибка сохранения единицы:', error);
+      alert('Не удалось сохранить единицу. Пожалуйста, попробуйте снова.');
+    }
+  };
+
+  const handleDeleteUnit = async (id: number) => {
+    if (!confirm('Удалить единицу?')) return;
+    
+    try {
+      const res = await fetch(`/api/admin/units?id=${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!res.ok) throw new Error('Ошибка удаления единицы');
+      
+      fetchUnits();
+    } catch (error) {
+      console.error('Ошибка удаления единицы:', error);
+      alert('Не удалось удалить единицу. Пожалуйста, попробуйте снова.');
+    }
+  };
+
+  // CRUD для типов форм
+  const handleSaveFormType = async () => {
+    if (!editingFormType) return;
+    
+    try {
+      const method = editingFormType.id ? 'PUT' : 'POST';
+      const url = editingFormType.id 
+        ? `/api/admin/apiformtypes?id=${editingFormType.id}` 
+        : '/api/admin/apiformtypes';
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editingFormType.name })
+      });
+      
+      if (!res.ok) throw new Error('Ошибка сохранения типа формы');
+      
+      fetchFormTypes();
+      setEditingFormType(null);
+    } catch (error) {
+      console.error('Ошибка сохранения типа формы:', error);
+      alert('Не удалось сохранить тип формы. Пожалуйста, попробуйте снова.');
+    }
+  };
+
+  const handleDeleteFormType = async (id: number) => {
+    if (!confirm('Удалить тип формы?')) return;
+    
+    try {
+      const res = await fetch(`/api/admin/apiformtypes?id=${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!res.ok) throw new Error('Ошибка удаления типа формы');
+      
+      fetchFormTypes();
+    } catch (error) {
+      console.error('Ошибка удаления типа формы:', error);
+      alert('Не удалось удалить тип формы. Пожалуйста, попробуйте снова.');
     }
   };
 
   return (
-    <div className="bg-[var(--color-dark)] text-[var(--color-white)] min-h-screen flex flex-col">
+    <div className="bg-[var(--color-dark)] text-white min-h-screen flex flex-col">
       {/* Header */}
-      <Header />
-
+      <AdminHeader />
+      
       {/* Основной контент */}
-      <main className="flex-grow">
+      <main className="flex-grow p-6">
         <div className="max-w-7xl mx-auto py-12 px-4 min-h-screen">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Управление упаковками</h2>
@@ -132,221 +391,99 @@ export default function PackingsPage() {
               onClick={() => setEditingPacking({
                 id: 0,
                 name: '',
-                material: '',
+                material_id: null,
+                material_name: '',
                 volume: 0,
-                unit: '',
+                unit_id: null,
+                unit_name: '',
                 image: '',
+                form_type_id: null,
                 form_type_name: ''
-              })}
-              className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity"
+              })} 
+              className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded mb-4"
             >
               Добавить упаковку
             </button>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-[var(--color-gray)]">
-              <thead className="bg-[var(--color-gray)]">
-                <tr>
-                  <th className="px-4 py-2">ID</th>
-                  <th className="px-4 py-2">Название</th>
-                  <th className="px-4 py-2">Материал</th>
-                  <th className="px-4 py-2">Объем</th>
-                  <th className="px-4 py-2">Ед. измерения</th>
-                  <th className="px-4 py-2">Тип формы</th>
-                  <th className="px-4 py-2">Изображение</th>
-                  <th className="px-4 py-2">Действия</th>
-                </tr>
-              </thead>
-              <tbody className="text-black">
-                {packagings.map(packing => (
-                  <tr 
-                    key={packing.id} 
-                    className="hover:bg-[var(--color-dark)] text-white transition-colors border-t border-[var(--color-gray)]"
-                  >
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">{packing.id}</td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">{packing.name}</td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">{packing.material || '-'}</td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">{packing.volume}</td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">{packing.unit || '-'}</td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">
-                      {packing.form_type_name || '-'}
-                    </td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3">
-                      {packing.image ? (
-                        <img 
-                          src={packing.image} 
-                          alt="Упаковка" 
-                          className="w-16 h-16 object-cover rounded"
-                        />
-                      ) : '-'}
-                    </td>
-                    <td className="border-b border-[var(--color-gray)] px-4 py-3 flex gap-2">
-                      <button 
-                        onClick={() => {
-                          setEditingPacking(packing);
-                          setImagePreview(packing.image || null);
-                        }}
-                        className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity"
-                      >
-                        Редактировать
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(packing.id)}
-                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                      >
-                        Удалить
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Основная таблица упаковок */}
+          <PackagingTable 
+            packagings={packagings}
+            handleDelete={handleDelete}
+            setEditingPacking={setEditingPacking}
+            setImagePreview={setImagePreview}
+          />
+          
+          {/* Модальное окно для упаковок */}
+          <PackagingModal
+            editingPacking={editingPacking}
+            materials={materials}
+            units={units}
+            formTypes={formTypes}
+            imagePreview={imagePreview}
+            handleMaterialChange={handleMaterialChange}
+            handleUnitChange={handleUnitChange}
+            handleFormTypeChange={handleFormTypeChange}
+            handleImageUpload={handleImageUpload}
+            handleButtonClick={handleButtonClick}
+            handleSave={handleSave}
+            setEditingPacking={setEditingPacking}
+            setImagePreview={setImagePreview}
+            fileInputRef={fileInputRef}
+          />
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Материалы</h2>
+            <button
+              onClick={() => setEditingMaterial({ id: 0, name: '' })}
+              className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity"
+            >
+              Добавить материал
+            </button>
           </div>
-
-          {/* Модальное окно */}
-          {editingPacking && (
-            <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
-              <div className="bg-[var(--color-dark)] p-6 rounded-lg shadow-xl w-full max-w-md">
-                <h2 className="text-xl font-bold mb-4">
-                  {editingPacking.id ? 'Редактировать упаковку' : 'Добавить упаковку'}
-                </h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block mb-1">Название</label>
-                    <input
-                      type="text"
-                      value={editingPacking.name}
-                      onChange={(e) => setEditingPacking({
-                        ...editingPacking,
-                        name: e.target.value
-                      })}
-                      className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block mb-1">Материал</label>
-                    <input
-                      type="text"
-                      value={editingPacking.material || ''}
-                      onChange={(e) => setEditingPacking({
-                        ...editingPacking,
-                        material: e.target.value
-                      })}
-                      className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block mb-1">Объем</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={editingPacking.volume}
-                      onChange={(e) => setEditingPacking({
-                        ...editingPacking,
-                        volume: parseFloat(e.target.value)
-                      })}
-                      className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block mb-1">Единица измерения</label>
-                    <input
-                      type="text"
-                      value={editingPacking.unit || ''}
-                      onChange={(e) => setEditingPacking({
-                        ...editingPacking,
-                        unit: e.target.value
-                      })}
-                      className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block mb-1">Тип формы</label>
-                    <select
-                      value={editingPacking.form_type_name || ''}
-                      onChange={(e) => {
-                        const selectedFormType = formTypes.find(ft => ft.name === e.target.value);
-                        setEditingPacking({
-                          ...editingPacking,
-                          form_type_name: e.target.value,
-                          form_type: selectedFormType?.id || null
-                        });
-                      }}
-                      className="w-full px-3 py-2 border rounded bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                    >
-                      <option value="">Не выбрано</option>
-                      {formTypes.map(ft => (
-                        <option key={ft.id} value={ft.name}>
-                          {ft.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div className="flex flex-col space-y-2">
-                    <label className="block mb-1">Изображение</label>
-                    <div 
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={handleImageUpload}
-                      className="border-2 border-dashed border-[var(--color-gray)] p-4 rounded text-center cursor-pointer hover:bg-[var(--color-dark)] relative"
-                    >
-                      {imagePreview ? (
-                        <img 
-                          src={imagePreview} 
-                          alt="Превью" 
-                          className="max-w-full h-auto mb-2"
-                        />
-                      ) : (
-                        <p>Перетащите изображение или нажмите для выбора</p>
-                      )}
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleImageUpload} 
-                        ref={fileInputRef}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      />
-                      <button
-                        onClick={handleButtonClick}
-                        className="mt-2 px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity"
-                      >
-                        Выбрать файл
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    onClick={() => {
-                      setEditingPacking(null);
-                      setImageFile(null);
-                      setImagePreview(null);
-                    }}
-                    className="px-4 py-2 bg-[var(--color-gray)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity"
-                  >
-                    Отмена
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:opacity-90 transition-opacity disabled:opacity-50"
-                  >
-                    Сохранить
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Управление материалами */}
+          <MaterialTable
+            materials={materials}
+            setEditingMaterial={setEditingMaterial}
+            handleDeleteMaterial={handleDeleteMaterial}
+          />
+          
+          {/* Модальное окно для материалов */}
+          <MaterialModal
+            editingMaterial={editingMaterial}
+            setEditingMaterial={setEditingMaterial}
+            handleSaveMaterial={handleSaveMaterial}
+          />
+          
+          {/* Управление единицами измерения */}
+          <UnitTable
+            units={units}
+            setEditingUnit={setEditingUnit}
+            handleDeleteUnit={handleDeleteUnit}
+          />
+          
+          {/* Модальное окно для единиц измерения */}
+          <UnitModal
+            editingUnit={editingUnit}
+            setEditingUnit={setEditingUnit}
+            handleSaveUnit={handleSaveUnit}
+          />
+          
+          {/* Управление типами форм */}
+          <FormTypeTable
+            formTypes={formTypes}
+            setEditingFormType={setEditingFormType}
+            handleDeleteFormType={handleDeleteFormType}
+          />
+          
+          {/* Модальное окно для типов форм */}
+          <FormTypeModal
+            editingFormType={editingFormType}
+            setEditingFormType={setEditingFormType}
+            handleSaveFormType={handleSaveFormType}
+          />
         </div>
       </main>
-
+      
       {/* Footer */}
       <Footer />
     </div>

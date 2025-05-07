@@ -27,7 +27,7 @@ const ProductionTourSection = () => {
         <h2 className="text-4xl font-bold text-[var(--color-accent)] sm:text-3xl">
           Проведем для вас экскурсию на производство
         </h2>
-        <p className="mt-4 text-lg text-[var(--color-white)] sm:text-base">
+        <p className="mt-4 text-lg text-white sm:text-base">
           Вы сможете узнать подробно про технологический процесс, ознакомиться с образцами продукции,
           встретиться с основателями Endorphin и задать все интересующие вопросы.
         </p>
@@ -40,7 +40,7 @@ const ProductionTourSection = () => {
             className="flex items-center p-4 bg-dark rounded-xl transition-transform hover:scale-105"
           >
             <div className="rounded-full p-3 bg-[var(--color-accent)] shrink-0">
-              <BsCheckCircle className="w-6 h-6 text-[var(--color-white)] sm:w-5 sm:h-5" />
+              <BsCheckCircle className="w-6 h-6 text-white sm:w-5 sm:h-5" />
             </div>
             <div className="ml-4">
               <span className="text-2xl font-bold text-[var(--color-accent)] sm:text-xl">

@@ -9,7 +9,6 @@ import { PromoSection } from '@/components/common/main/PromoSection';
 import CollaborationStepsSection from '@/components/common/main/CollaborationStepsSection';
 import FaqSection from '@/components/common/main/FaqSection';
 import ContactSection from '@/components/common/main/ContactSection';
-import ReviewsSection from '@/components/common/main/ReviewsSection';
 import { CartProvider } from '@/components/CartProvider';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
@@ -18,37 +17,43 @@ import Footer from '@/components/common/Footer';
 
 
 export default function HomePage() {
-    return <div>
-        <CartProvider>
-             <Header />
-        </CartProvider>
-        
-        <div className="text-white cover">
-            
-            <HeroSection />
-            <section className=''>
-                <CategoryCatalog />
-            </section>
-            <section className='max-w-7xl mx-auto'>
-                <ProductionTourSection />
-            </section>
-            <section className='max-w-7xl mx-auto'>
-                <ProductionFeaturesSection />
-            </section>
-                <PromoSection />
-            <section className='max-w-7xl mx-auto'>
-                <CollaborationStepsSection />
-            </section>
-            <section className='max-w-7xl mx-auto'>
-                <FaqSection />
-            </section>
-            <section className='max-w-7xl mx-auto'>
+    return (
+      <div>
+        <Header />
+  
+        <main className="text-white cover">
+          <HeroSection />
+  
+          <section className="">
+            <CartProvider>
+              <CategoryCatalog />
+            </CartProvider>
+          </section>
+  
+          <section className="max-w-7xl mx-auto">
+            <ProductionTourSection />
+          </section>
+  
+          <section className="max-w-7xl mx-auto">
+            <ProductionFeaturesSection />
+          </section>
+  
+          <PromoSection />
+  
+          <section className="max-w-7xl mx-auto">
+            <CollaborationStepsSection />
+          </section>
+  
+          <section className="max-w-7xl mx-auto">
+            <FaqSection />
+          </section>
+  
+          <section className="max-w-7xl mx-auto">
             <ContactSection />
-                </section>
-            <section className='max-w-7xl mx-auto'>
-                <ReviewsSection />
-            </section>
-        </div>
+          </section>
+        </main>
+  
         <Footer />
-    </div>;
+      </div>
+    );
   }

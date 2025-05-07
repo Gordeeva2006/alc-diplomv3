@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import AdminHeader from '../AdminHeader';
 
 interface User {
   id: number;
@@ -76,7 +77,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/login');
       return;
     }
 
@@ -214,179 +215,186 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="p-6 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Управление пользователями</h1>
-        <div className="flex gap-4">
-          <button 
-            onClick={() => setNewUser({ email: '', role: 4, role_name: 'manager' })}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            Добавить пользователя
-          </button>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={showNonUsers}
-              onChange={(e) => setShowNonUsers(e.target.checked)}
-              className="form-checkbox h-5 w-5 text-blue-600"
-            />
-            <span>Показать только не-пользователей</span>
-          </label>
-        </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-4 py-2">ID</th>
-              <th className="px-4 py-2">Email</th>
-              <th className="px-4 py-2">Роль</th>
-              <th className="px-4 py-2">Дата регистрации</th>
-              <th className="px-4 py-2">Действия</th>
-            </tr>
-          </thead>
-          <tbody className="text-black">
-            {filteredUsers.map(user => (
-              <tr key={user.id} className="border-t">
-                <td className="px-4 py-2">{user.id}</td>
-                <td className="px-4 py-2">{user.email}</td>
-                <td className="px-4 py-2">{user.role_name}</td>
-                <td className="px-4 py-2">{new Date(user.created_at).toLocaleDateString()}</td>
-                <td className="px-4 py-2 flex gap-2">
-                  {canEditUser(user) && (
-                    <button 
-                      onClick={() => setEditingUser(user)}
-                      className="text-blue-500 hover:underline"
-                    >
-                      Редактировать
-                    </button>
-                  )}
-                  {canDeleteUser(user) && (
-                    <button 
-                      onClick={() => handleDeleteUser(user.id)}
-                      className="text-red-500 hover:underline"
-                    >
-                      Удалить
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {/* Модальное окно создания пользователя */}
-      {newUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Создать пользователя</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-1">Email</label>
-                <input
-                  type="email"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({
-                    ...newUser,
-                    email: e.target.value
-                  })}
-                  className="w-full border p-2 rounded"
-                  required
-                />
+    <main className='flex flex-col min-h-screen'>
+      <AdminHeader />
+        <div className="p-6 flex-grow ">
+          <div className='mx-auto max-w-7xl'>
+              <div className="flex justify-between  mb-6">
+                <h1 className="text-2xl font-bold text-white">Управление пользователями</h1>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setNewUser({ email: '', role: 4, role_name: 'manager' })}
+                    className="bg-accent text-white px-6 py-4 whitespace-nowrap rounded"
+                  >
+                    Добавить пользователя
+                  </button>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={showNonUsers}
+                      onChange={(e) => setShowNonUsers(e.target.checked)}
+                      className="form-checkbox h-5 w-5 text-blue-600"
+                    />
+                    <span className='text-white'>Показать только не-пользователей</span>
+                  </label>
+                </div>
               </div>
-              <div>
-                <label className="block mb-1">Роль</label>
-                <select
-                  value={newUser.role}
-                  onChange={(e) => setNewUser({
-                    ...newUser,
-                    role: parseInt(e.target.value),
-                    role_name: roles.find(r => r.id === parseInt(e.target.value))?.name || 'manager'
-                  })}
-                  className="w-full border p-2 rounded"
-                  disabled={!getAvailableRoles().length}
-                >
-                  {getAvailableRoles().map(role => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setNewUser(null)}
-                className="px-4 py-2 border rounded"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleCreateUser}
-                className="px-4 py-2 bg-blue-500 text-white rounded"
-              >
-                Создать
-              </button>
-            </div>
+              <div className="bg-[var(--color-dark)] rounded-lg overflow-hidden shadow-md">
+                <table className="min-w-full divide-y divide-[var(--color-gray)] text-white">
+                  <thead>
+                    <tr className="bg-[var(--color-gray)]">
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Роль</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Дата регистрации</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--color-gray)]">
+                    {filteredUsers.map(user => (
+                      <tr key={user.id} className="hover:bg-[var(--color-gray)] transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">{user.id}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{user.role_name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{new Date(user.created_at).toLocaleDateString()}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                          {canEditUser(user) && (
+                            <button 
+                              onClick={() => setEditingUser(user)}
+                              className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+                            >
+                              Редактировать
+                            </button>
+                          )}
+                          {canDeleteUser(user) && (
+                            <button 
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                            >
+                              Удалить
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>            
           </div>
+
+              {/* Модальное окно создания пользователя */}
+              {newUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                    <h2 className="text-xl font-bold mb-4">Создать пользователя</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={newUser.email}
+                          onChange={(e) => setNewUser({
+                            ...newUser,
+                            email: e.target.value
+                          })}
+                          className="w-full border p-2 rounded"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-1">Роль</label>
+                        <select
+                          value={newUser.role}
+                          onChange={(e) => setNewUser({
+                            ...newUser,
+                            role: parseInt(e.target.value),
+                            role_name: roles.find(r => r.id === parseInt(e.target.value))?.name || 'manager'
+                          })}
+                          className="w-full border p-2 rounded"
+                          disabled={!getAvailableRoles().length}
+                        >
+                          {getAvailableRoles().map(role => (
+                            <option key={role.id} value={role.id}>
+                              {role.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button
+                        onClick={() => setNewUser(null)}
+                        className="px-6 py-4 whitespace-nowrap border rounded"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        onClick={handleCreateUser}
+                        className="px-6 py-4 whitespace-nowrap bg-blue-500 text-white rounded"
+                      >
+                        Создать
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Модальное окно редактирования */}
+              {editingUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                    <h2 className="text-xl font-bold mb-4">Редактировать пользователя</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={editingUser.email}
+                          onChange={(e) => setEditingUser({
+                            ...editingUser,
+                            email: e.target.value
+                          })}
+                          className="w-full border p-2 rounded"
+                          disabled
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-1">Роль</label>
+                        <select
+                          value={editingUser.role}
+                          onChange={(e) => setEditingUser({
+                            ...editingUser,
+                            role: parseInt(e.target.value),
+                            role_name: roles.find(r => r.id === parseInt(e.target.value))?.name || 'manager'
+                          })}
+                          className="w-full border p-2 rounded"
+                        >
+                          {getAvailableRoles().map(role => (
+                            <option key={role.id} value={role.id}>
+                              {role.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button
+                        onClick={() => setEditingUser(null)}
+                        className="px-6 py-4 whitespace-nowrap border rounded"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        onClick={handleUpdateUser}
+                        className="px-6 py-4 whitespace-nowrap bg-blue-500 text-white rounded"
+                      >
+                        Сохранить
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
         </div>
-      )}
-      {/* Модальное окно редактирования */}
-      {editingUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Редактировать пользователя</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-1">Email</label>
-                <input
-                  type="email"
-                  value={editingUser.email}
-                  onChange={(e) => setEditingUser({
-                    ...editingUser,
-                    email: e.target.value
-                  })}
-                  className="w-full border p-2 rounded"
-                  disabled
-                />
-              </div>
-              <div>
-                <label className="block mb-1">Роль</label>
-                <select
-                  value={editingUser.role}
-                  onChange={(e) => setEditingUser({
-                    ...editingUser,
-                    role: parseInt(e.target.value),
-                    role_name: roles.find(r => r.id === parseInt(e.target.value))?.name || 'manager'
-                  })}
-                  className="w-full border p-2 rounded"
-                >
-                  {getAvailableRoles().map(role => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setEditingUser(null)}
-                className="px-4 py-2 border rounded"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleUpdateUser}
-                className="px-4 py-2 bg-blue-500 text-white rounded"
-              >
-                Сохранить
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </main>
+  
   );
 }

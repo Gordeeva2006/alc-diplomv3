@@ -86,9 +86,10 @@ export async function POST(req: NextRequest) {
     let totalAmount = 0;
     const now = new Date().toISOString().slice(0, 19).replace("T", " ");
 
+    
     const [orderResult] = await connection.query(
-      `INSERT INTO orders (client_id, status, created_at) VALUES (?, 'PENDING', ?)`,
-      [clientId, now]
+      `INSERT INTO orders (client_id, status, created_at) VALUES (?, ?, ?)`,
+      [clientId, 1, now]
     );
 
     orderId = (orderResult as any).insertId;
@@ -149,7 +150,7 @@ export async function POST(req: NextRequest) {
     }
 
     await connection.query(
-      `UPDATE orders SET status = 'PENDING', total_amount = ? WHERE id = ?`,
+      `UPDATE orders SET status = 1, total_amount = ? WHERE id = ?`,
       [totalAmount, orderId]
     );
 

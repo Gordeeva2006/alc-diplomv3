@@ -9,7 +9,7 @@ const MarketingConsentPage = () => {
       <Header />
       <main >
 
-        <div className="max-w-7xl mx-auto ">
+        <div className="max-w-7xl mx-auto py-12">
           <div className="flex gap-8">
            
           <div className="prose prose-invert max-w-none text-gray-300 leading-6">
@@ -87,7 +87,7 @@ const MarketingConsentPage = () => {
                   <table className="w-full border-collapse border border-[var(--color-white] rounded-lg overflow-hidden">
                     <tbody>
                       <tr className="bg-dark/50">
-                        <th className="p-4 font-bold text-left text-[var(--color-white)] border-b border-[var(--color-white]">
+                        <th className="p-4 font-bold text-left text-white border-b border-[var(--color-white]">
                           Цель обработки
                         </th>
                         <td className="p-4  border-b border-[var(--color-white]">
@@ -95,7 +95,7 @@ const MarketingConsentPage = () => {
                         </td>
                       </tr>
                       <tr className="bg-dark/30">
-                        <th className="p-4 font-bold text-left text-[var(--color-white)] border-b border-[var(--color-white]">
+                        <th className="p-4 font-bold text-left text-white border-b border-[var(--color-white]">
                           Персональные данные
                         </th>
                         <td className="p-4  border-b border-[var(--color-white]">
@@ -108,7 +108,7 @@ const MarketingConsentPage = () => {
                         </td>
                       </tr>
                       <tr className="bg-dark/50">
-                        <th className="p-4 font-bold text-left text-[var(--color-white)] border-b border-[var(--color-white]">
+                        <th className="p-4 font-bold text-left text-white border-b border-[var(--color-white]">
                           Правовые основания
                         </th>
                         <td className="p-4  border-b border-[var(--color-white]">
@@ -116,7 +116,7 @@ const MarketingConsentPage = () => {
                         </td>
                       </tr>
                       <tr className="bg-dark/30">
-                        <th className="p-4 font-bold text-left text-[var(--color-white)]">
+                        <th className="p-4 font-bold text-left text-white">
                           Виды обработки персональных данных
                         </th>
                         <td className="p-4 ">

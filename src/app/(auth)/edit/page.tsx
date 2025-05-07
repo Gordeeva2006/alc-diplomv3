@@ -191,7 +191,7 @@ const EditProfilePage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="bg-dark p-8 rounded-lg shadow-md w-full flex space-y-6 h-160">
             <div className=''>
-                  <h2 className="text-2xl font-bold text-center text-[var(--color-white)] pb-6">
+                  <h2 className="text-2xl font-bold text-center text-white pb-6">
                     Редактирование профиля
                   </h2>
                   {/* Форма профиля */}
@@ -200,7 +200,7 @@ const EditProfilePage = () => {
                     <select 
                       value={formData.userType}
                       disabled
-                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
+                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
                     >
                       <option value="individual">Индивидуальный предприниматель</option>
                       <option value="legal_entity">Юридическое лицо</option>
@@ -212,7 +212,7 @@ const EditProfilePage = () => {
                       placeholder="Название компании"
                       value={formData.companyName}
                       onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                     />
                     {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
                     
@@ -221,7 +221,7 @@ const EditProfilePage = () => {
                       placeholder="Номер телефона"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                     />
                     {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                     
@@ -230,7 +230,7 @@ const EditProfilePage = () => {
                       placeholder="Email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                     />
                     {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                     
@@ -242,7 +242,7 @@ const EditProfilePage = () => {
                           placeholder="Юридический адрес"
                           value={formData.legalAddress}
                           onChange={(e) => setFormData({ ...formData, legalAddress: e.target.value })}
-                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                         />
                         {errors.legalAddress && <p className="text-red-500 text-sm mt-1">{errors.legalAddress}</p>}
                         
@@ -251,7 +251,7 @@ const EditProfilePage = () => {
                           placeholder="ОГРН"
                           value={formData.ogrn}
                           disabled
-                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
+                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
                         />
                         
                         <input 
@@ -259,7 +259,7 @@ const EditProfilePage = () => {
                           placeholder="КПП"
                           value={formData.kpp}
                           disabled
-                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
+                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
                         />
                       </>
                     )}
@@ -272,7 +272,7 @@ const EditProfilePage = () => {
                           placeholder="Юридический адрес"
                           value={formData.legalAddress}
                           onChange={(e) => setFormData({ ...formData, legalAddress: e.target.value })}
-                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                         />
                         {errors.legalAddress && <p className="text-red-500 text-sm mt-1">{errors.legalAddress}</p>}
                       <input 
@@ -280,14 +280,14 @@ const EditProfilePage = () => {
                           placeholder="ИНН"
                           value={formData.inn}
                           disabled
-                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
+                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
                         />
                         <input 
                           type="text"
                           placeholder="ОГРНИП"
                           value={formData.ogrnip}
                           disabled
-                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
+                          className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)] opacity-70 cursor-not-allowed"
                         />
                       </>
                     )}
@@ -295,7 +295,7 @@ const EditProfilePage = () => {
                     <button 
                       type="submit"
                       disabled={isLoading}
-                      className={`w-full bg-[var(--color-accent)] text-[var(--color-white)] py-2 px-4 rounded transition ${
+                      className={`w-full bg-[var(--color-accent)] text-white py-2 px-4 rounded transition ${
                         isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:brightness-90'
                       }`}
                     >
@@ -309,7 +309,7 @@ const EditProfilePage = () => {
             <div>
                   {/* Форма изменения пароля */}
               <div >
-                  <h3 className="text-2xl font-bold text-center text-[var(--color-white)] pb-6 ">
+                  <h3 className="text-2xl font-bold text-center text-white pb-6 ">
                     Изменить пароль
                   </h3>
                   <form onSubmit={handleSubmitPassword} className="space-y-4">
@@ -318,7 +318,7 @@ const EditProfilePage = () => {
                       placeholder="Текущий пароль"
                       value={passwordForm.currentPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                     />
                     {errors.currentPassword && <p className="text-red-500 text-sm mt-1">{errors.currentPassword}</p>}
                     
@@ -327,7 +327,7 @@ const EditProfilePage = () => {
                       placeholder="Новый пароль"
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                     />
                     {errors.newPassword && <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>}
                     
@@ -336,14 +336,14 @@ const EditProfilePage = () => {
                       placeholder="Подтвердите пароль"
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                      className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                     />
                     {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
                     
                     <button 
                       type="submit"
                       disabled={isLoading}
-                      className={`w-full bg-[var(--color-accent)] text-[var(--color-white)] py-2 px-4 rounded transition ${
+                      className={`w-full bg-[var(--color-accent)] text-white py-2 px-4 rounded transition ${
                         isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:brightness-90'
                       }`}
                     >
@@ -365,7 +365,7 @@ const EditProfilePage = () => {
                 <button 
                   type="button"
                   onClick={() => setShowDeleteModal(true)}
-                  className="w-full bg-red-600 text-[var(--color-white)] py-6 px-4 rounded transition hover:brightness-90 mt-4"
+                  className="w-full bg-red-600 text-white py-6 px-4 rounded transition hover:brightness-90 mt-4"
                 >
                   Удалить профиль
                 </button>
@@ -378,20 +378,20 @@ const EditProfilePage = () => {
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-dark p-6 rounded-lg space-y-4">
-            <p className="text-[var(--color-white)] text-center">
+            <p className="text-white text-center">
               Вы уверены, что хотите удалить профиль? Это действие нельзя отменить.
             </p>
             <div className="flex gap-4">
               <button 
                 onClick={() => setShowDeleteModal(false)}
-                className="w-full bg-[var(--color-gray)] text-[var(--color-white)] py-2 rounded hover:brightness-90"
+                className="w-full bg-[var(--color-gray)] text-white py-2 rounded hover:brightness-90"
               >
                 Отмена
               </button>
               <button 
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className={`w-full bg-red-600 text-[var(--color-white)] py-2 rounded transition ${
+                className={`w-full bg-red-600 text-white py-2 rounded transition ${
                   isDeleting ? 'opacity-70 cursor-not-allowed' : 'hover:brightness-90'
                 }`}
               >

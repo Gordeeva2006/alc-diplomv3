@@ -130,7 +130,7 @@ const RegisterPage = () => {
       <Header />
       <div className="flex-grow flex justify-center items-center p-4">
         <div className="bg-dark p-8 rounded-lg shadow-md w-full max-w-lg space-y-6 my-20">
-          <h2 className="text-2xl font-bold text-center text-[var(--color-white)]">
+          <h2 className="text-2xl font-bold text-center text-white">
             Регистрация
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -139,7 +139,7 @@ const RegisterPage = () => {
               <select 
                 value={formData.userType}
                 onChange={(e) => handleTypeChange(e.target.value as 'individual' | 'legal_entity')}
-                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               >
                 <option value="individual">Индивидуальный предприниматель</option>
                 <option value="legal_entity">Юридическое лицо</option>
@@ -158,7 +158,7 @@ const RegisterPage = () => {
                       ...formData, 
                       ogrn: e.target.value.replace(/\D/g, '').slice(0, 13) 
                     })}
-                    className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                   />
                   {errors.ogrn && <p className="text-red-500 text-sm mt-1">{errors.ogrn}</p>}
                 </div>
@@ -171,7 +171,7 @@ const RegisterPage = () => {
                       ...formData, 
                       kpp: e.target.value.replace(/\D/g, '').slice(0, 9) 
                     })}
-                    className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                    className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                   />
                   {errors.kpp && <p className="text-red-500 text-sm mt-1">{errors.kpp}</p>}
                 </div>
@@ -185,7 +185,7 @@ const RegisterPage = () => {
                 placeholder="Название компании"
                 value={formData.companyName}
                 onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
               {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
             </div>
@@ -195,7 +195,7 @@ const RegisterPage = () => {
                 placeholder="Номер телефона"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
               {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
             </div>
@@ -208,7 +208,7 @@ const RegisterPage = () => {
                   ...formData, 
                   inn: e.target.value.replace(/\D/g, '').slice(0, 10) 
                 })}
-                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
               {errors.inn && <p className="text-red-500 text-sm mt-1">{errors.inn}</p>}
             </div>
@@ -224,7 +224,7 @@ const RegisterPage = () => {
                     ...formData, 
                     ogrnip: e.target.value.replace(/\D/g, '').slice(0, 15) 
                   })}
-                  className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                  className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                 />
                 {errors.ogrnip && <p className="text-red-500 text-sm mt-1">{errors.ogrnip}</p>}
               </div>
@@ -237,7 +237,7 @@ const RegisterPage = () => {
                 placeholder="Юридический адрес"
                 value={formData.legalAddress}
                 onChange={(e) => setFormData({ ...formData, legalAddress: e.target.value })}
-                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
               {errors.legalAddress && <p className="text-red-500 text-sm mt-1">{errors.legalAddress}</p>}
             </div>
@@ -249,7 +249,7 @@ const RegisterPage = () => {
                 placeholder="Email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)]"
+                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
@@ -261,7 +261,7 @@ const RegisterPage = () => {
                 placeholder="Пароль"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)] pr-10"
+                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)] pr-10"
               />
               <button
                 type="button"
@@ -290,7 +290,7 @@ const RegisterPage = () => {
                 placeholder="Подтвердите пароль"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-[var(--color-white)] focus:outline-none focus:border-[var(--color-accent)] pr-10"
+                className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)] pr-10"
               />
               <button
                 type="button"
@@ -316,7 +316,7 @@ const RegisterPage = () => {
             <button 
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-[var(--color-accent)] text-[var(--color-white)] py-2 px-4 rounded transition focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-opacity-50 ${
+              className={`w-full bg-[var(--color-accent)] text-white py-2 px-4 rounded transition focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-opacity-50 ${
                 isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:brightness-90'
               }`}
             >

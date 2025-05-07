@@ -1,160 +1,326 @@
-'use client'
-import React, { useState } from 'react';
+'use client';
+import { useEffect, useState } from 'react';
+import { useCart } from '@/components/CartProvider';
+import Image from 'next/image';
+
+interface PackagingOption {
+  id: number;
+  name: string;
+  volume: number;
+  unit: string;
+  image: string | null;
+}
 
 interface Product {
   id: number;
-  title: string;
-  url: string;
-  image: string;
-  oldPrice?: number;
-  price: number;
+  name: string;
   description: string;
-  weight: number;
-  categoryId: string;
+  price_per_gram: number;
+  category_name: string;
+  form_type_name: string | null;
+  packagingOptions: PackagingOption[];
 }
 
-const CategoryFilter: React.FC<{
-  activeCategory: string;
-  setActiveCategory: (category: string) => void;
-}> = ({ activeCategory, setActiveCategory }) => {
-  const categories = [
-    { id: 'all', title: 'Все товары', href: '/' },
-    { id: '1', title: 'Добавки', href: '/bady' },
-    { id: '3', title: 'Мерч базы', href: '/odejda-i-aksessuary' },
-    { id: '2', title: 'Красота и здоровье', href: '/krasota-i-zdorove' }
-  ];
-
-  return (
-    <div className="flex overflow-x-auto pb-4 mb-6 scrollbar-hide space-x-2">
-      {categories.map((category) => (
-        <a
-          key={category.id}
-          href={category.href}
-          className={`flex items-center font-black px-4 py-2 rounded-lg transition-colors
-            ${
-              activeCategory === category.id
-                ? 'bg-[var(--color-accent)] text-[var(--color-white)]'
-                : 'bg-dark text-[var(--color-gray)] hover:bg-[var(--color-hover)]'
-            }`}
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveCategory(category.id);
-          }}
-        >
-          <div className="text-sm font-medium whitespace-nowrap">
-            {category.title}
-          </div>
-        </a>
-      ))}
-    </div>
-  );
+const calculatePackagingPrice = (
+  pricePerGram: number,
+  selectedPackaging: PackagingOption | null,
+  quantity: number
+): number => {
+  if (!selectedPackaging) return 0;
+  return pricePerGram * selectedPackaging.volume * quantity;
 };
 
-const CatalogItem: React.FC<{ product: Product }> = ({ product }) => {
-  return (
-    <div className="group relative bg-dark rounded-3xl h-full flex flex-col">
-      <div className="flex-shrink-0">
-        
+export default function CatalogSection() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedPackagings, setSelectedPackagings] = useState<Record<number, number | null>>({});
+  const [selectedQuantities, setSelectedQuantities] = useState<Record<number, number>>({});
+  const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [activeSelectId, setActiveSelectId] = useState<number | null>(null);
+  const [hideTimeout, setHideTimeout] = useState<NodeJS.Timeout | null>(null);
 
-        <a href={product.url} className="block overflow-hidden rounded-t-3xl">
-          <img
-            src={product.image}
-            alt={product.title}
-            className="h-64 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-            width={300}
-            height={300}
-          />
-        </a>
-      </div>
+  const { addToCart } = useCart();
 
-      <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-        <div className="space-y-2">
-          <a href={product.url} className="text-xl font-medium text-[var(--color-white)] hover:text-[var(--color-accent)] block">
-            {product.title}
-          </a>
-          <p className="text-sm text-[var(--color-gray)] line-clamp-3">{product.description}</p>
-        </div>
+  // Загрузка товаров
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        // 🔥 Ограничиваем вывод до 6 товаров здесь
+        const limitedData = data.slice(0, 6);
+        setProducts(limitedData);
 
-        <div className="space-y-2">
-          <div className="space-y-1">
-            {product.oldPrice && (
-              <s className="text-base text-[var(--color-gray-light)]">
-                {product.oldPrice.toLocaleString('ru-RU')} руб.
-              </s>
-            )}
-            <div className="text-2xl font-bold text-[var(--color-accent)]">
-              {product.price.toLocaleString('ru-RU')} руб.
-            </div>
-          </div>
+        const uniqueCategories = Array.from(new Set(limitedData.map((p: Product) => p.category_name)));
+        setCategories(uniqueCategories);
 
-          {product.weight > 0 && (
-            <div className="text-base text-[var(--color-gray)]">
-              Остаток: <span className="font-medium">
-                {product.weight.toLocaleString('ru-RU', {
-                  minimumFractionDigits: 1,
-                  maximumFractionDigits: 3
-                })} кг
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+        const initialQuantities = limitedData.reduce((acc: Record<number, number>, product: Product) => {
+          acc[product.id] = 200;
+          return acc;
+        }, {});
 
-const CatalogSection: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  
-  const products: Product[] = [
-    {
-      id: 29,
-      title: 'Креатин',
-      url: '/bady/kreatin',
-      image: 'https://arsenshop.ru/uploads/webp/uploads/product/000/34/IMG_20250125_165200_920_2025-01-26_15-18-11.webp',
-      oldPrice: 3400,
-      price: 2100,
-      description: 'Заряжает энергией, ускоряет набор мышечной массы, повышает силу и выносливость.',
-      weight: 2.5,
-      categoryId: '1'
-    },
-    {
-      id: 35,
-      title: 'Протеин',
-      url: '/bady/protein',
-      image: 'https://arsenshop.ru/uploads/webp/uploads/product/000/35/protein-image.webp',
-      price: 3500,
-      description: 'Высококачественный сывороточный протеин.',
-      weight: 3.2,
-      categoryId: '1'
+        setSelectedQuantities(initialQuantities);
+      });
+  }, []);
+
+  // Установка количества без округления
+  const setRawQuantity = (productId: number, value: number) => {
+    setSelectedQuantities({
+      ...selectedQuantities,
+      [productId]: value,
+    });
+  };
+
+  // Применение округления при потере фокуса
+  const applyRoundedQuantity = (productId: number, value: number) => {
+    const adjustedValue = Math.max(200, Math.round(value / 50) * 50);
+    setSelectedQuantities({
+      ...selectedQuantities,
+      [productId]: adjustedValue,
+    });
+  };
+
+  // Обработчики фокуса
+  const handleFocus = (productId: number) => {
+    setFocusedFields({
+      ...focusedFields,
+      [productId]: true,
+    });
+  };
+
+  const handleBlur = (productId: number) => {
+    setFocusedFields({
+      ...focusedFields,
+      [productId]: false,
+    });
+    applyRoundedQuantity(productId, selectedQuantities[productId]);
+  };
+
+  // Изменение количества
+  const changeQuantity = (productId: number, delta: number) => {
+    const newQty = selectedQuantities[productId] + delta;
+    applyRoundedQuantity(productId, newQty);
+  };
+
+  // Добавление в корзину
+  const handleAddToCart = async (product: Product) => {
+    const selectedPkg = product.packagingOptions.find(pkg => 
+      pkg.id === selectedPackagings[product.id]
+    ) || product.packagingOptions[0];
+
+    const quantity = selectedQuantities[product.id];
+    const price = calculatePackagingPrice(
+      product.price_per_gram,
+      selectedPkg,
+      quantity
+    );
+
+    try {
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          packagingId: selectedPkg.id,
+          quantity,
+          price
+        }),
+      });
+
+      if (!res.ok) throw new Error('Не удалось добавить товар');
+      alert('✅ Товар добавлен в корзину');
+    } catch (error) {
+      console.error('Ошибка добавления в корзину:', error);
+      alert('❌ Не удалось добавить товар');
     }
-  ];
+  };
 
-  const filteredProducts = activeCategory === 'all' 
-    ? products 
-    : products.filter(product => product.categoryId === activeCategory);
+  // Фильтрация товаров
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = !selectedCategory || product.category_name === selectedCategory;
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Функции для отображения изображения упаковки
+  const handleShowImage = (productId: number) => {
+    clearTimeout(hideTimeout);
+    setActiveSelectId(productId);
+  };
+
+  const handleHideImage = (productId: number) => {
+    const timer = setTimeout(() => {
+      setActiveSelectId(null);
+    }, 300);
+    setHideTimeout(timer);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 bg-[var(--color-background)]">
-      <CategoryFilter 
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-      />
-      
-      <div className="flex flex-wrap justify-center gap-6">
-        {filteredProducts.map((product) => (
-          <div 
-            key={product.id}
-            className="w-full sm:w-[calc(50%-24px)] md:w-[calc(33.333%-24px)] lg:w-[calc(25%-24px)] flex-shrink-0"
-            style={{ maxWidth: '280px' }}
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold mb-6 text-center">Популярные товары</h2>
+
+      <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-center">
+        <input
+          type="text"
+          placeholder="Поиск по названию..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full sm:w-1/2 border border-[#C09D6A] rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#C09D6A]"
+        />
+
+        <div className="flex flex-wrap gap-2 justify-center">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-4 py-2 rounded-full text-sm ${
+              selectedCategory === null
+                ? 'bg-[#C09D6A] text-white'
+                : 'bg-gray-200 text-gray-800 hover:bg-[#f5f0ec]'
+            }`}
           >
-            <CatalogItem product={product} />
-          </div>
-        ))}
+            Все
+          </button>
+          {categories.map(category => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-4 py-2 rounded-full text-sm ${
+                selectedCategory === category
+                  ? 'bg-[#C09D6A] text-white'
+                  : 'bg-gray-200 text-gray-800 hover:bg-[#f5f0ec]'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProducts.map(product => {
+          const selectedPackaging = product.packagingOptions.find(pkg => 
+            pkg.id === selectedPackagings[product.id]
+          ) || product.packagingOptions[0];
+
+          return (
+            <div
+              key={product.id}
+              className="bg-dark rounded-lg shadow-md p-4 transition-shadow hover:shadow-lg"
+            >
+              <h2 className="text-xl font-semibold mb-2">{product.name}</h2>
+              <p className="text-gray-400 mb-4">{product.description}</p>
+
+              <div className="space-y-3 mb-4">
+                {product.packagingOptions.length > 0 && (
+                  <div
+                    className="relative"
+                    onMouseEnter={() => handleShowImage(product.id)}
+                    onMouseLeave={() => handleHideImage(product.id)}
+                    onTouchStart={() => handleShowImage(product.id)}
+                    onTouchEnd={() => handleHideImage(product.id)}
+                  >
+                    <select
+                      className="w-full border border-[#C09D6A] rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#C09D6A] transition-all"
+                      onChange={(e) =>
+                        setSelectedPackagings({
+                          ...selectedPackagings,
+                          [product.id]: Number(e.target.value)
+                        })
+                      }
+                      value={selectedPackagings[product.id] || product.packagingOptions[0]?.id || ''}
+                    >
+                      {product.packagingOptions.map(pkg => (
+                        <option key={pkg.id} value={pkg.id}>
+                          {pkg.name} ({pkg.volume}{pkg.unit})
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Показываем изображение упаковки при наведении */}
+                    {activeSelectId === product.id && selectedPackaging?.image && (
+                      <div className="absolute top-12 left-0 w-48 h-48 bg-white rounded-lg shadow-lg overflow-hidden z-50">
+                        <Image
+                          src={selectedPackaging.image}
+                          alt={selectedPackaging.name}
+                          width={192}
+                          height={192}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex flex-row gap-1 w-2/6">
+                    <button
+                      onClick={() => changeQuantity(product.id, -250)}
+                      className="w-1/3 h-10 bg-white text-black rounded-full hover:bg-gray-300 transition-colors"
+                      title="-250"
+                    >
+                      -250
+                    </button>
+                    <button
+                      onClick={() => changeQuantity(product.id, -50)}
+                      className="w-1/3 h-10 bg-white text-black rounded-full hover:bg-gray-300 transition-colors"
+                      title="-50"
+                    >
+                      -50
+                    </button>
+                  </div>
+
+                  <input
+                    type="number"
+                    min="200"
+                    value={selectedQuantities[product.id]}
+                    onChange={(e) =>
+                      setRawQuantity(product.id, parseInt(e.target.value) || 0)
+                    }
+                    onFocus={() => handleFocus(product.id)}
+                    onBlur={() => handleBlur(product.id)}
+                    className="w-20 text-center font-extrabold bg-[#C09D6A] rounded-full p-2 focus:outline-none"
+                  />
+
+                  <div className="flex justify-end flex-row gap-1 w-2/6">
+                    <button
+                      onClick={() => changeQuantity(product.id, 50)}
+                      className="w-1/3 h-10 bg-white text-black rounded-full hover:bg-gray-300 transition-colors"
+                      title="+50"
+                    >
+                      +50
+                    </button>
+                    <button
+                      onClick={() => changeQuantity(product.id, 250)}
+                      className="w-1/3 h-10 bg-white text-black rounded-full hover:bg-gray-300 transition-colors"
+                      title="+250"
+                    >
+                      +250
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-1">
+                  <p className="font-light text-sm text-white">
+                    Сумма за партию: 
+                    {calculatePackagingPrice(
+                      product.price_per_gram,
+                      selectedPackaging,
+                      selectedQuantities[product.id]
+                    ).toLocaleString()} ₽
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleAddToCart(product)}
+                className="w-full bg-[#C09D6A] text-white px-4 py-4 rounded-full hover:bg-[#8a693a] transition-colors"
+              >
+                Добавить в заявку
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
-};
-
-export default CatalogSection;
+}

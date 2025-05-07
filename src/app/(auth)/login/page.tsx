@@ -69,7 +69,7 @@ export default function LoginPage() {
       <Header />
       <div className="flex-grow flex justify-center items-center p-4">
         <div className="bg-dark p-8 rounded-2xl shadow-md w-full max-w-md space-y-6">
-          <h2 className="text-3xl font-extrabold text-center text-[var(--color-white)]">
+          <h2 className="text-3xl font-extrabold text-center text-white">
             Вход в личный кабинет
           </h2>
           
@@ -88,7 +88,7 @@ export default function LoginPage() {
                   w-full px-4 py-3 rounded-lg 
                   border border-[var(--color-gray)] 
                   bg-[var(--color-dark-secondary)] 
-                  text-[var(--color-white)] 
+                  text-white 
                   focus:outline-none focus:border-[var(--color-accent)]
                   ${errors.email ? 'border-red-500' : ''}
                 `}
@@ -109,7 +109,7 @@ export default function LoginPage() {
                   w-full px-4 py-3 rounded-lg 
                   border border-[var(--color-gray)] 
                   bg-[var(--color-dark-secondary)] 
-                  text-[var(--color-white)] 
+                  text-white 
                   focus:outline-none focus:border-[var(--color-accent)]
                   ${errors.password ? 'border-red-500' : ''}
                 `}
@@ -125,7 +125,7 @@ export default function LoginPage() {
               disabled={isLoading}
               className={`
                 w-full bg-[var(--color-accent)] 
-                text-[var(--color-white)] 
+                text-white 
                 py-3 px-6 rounded-lg 
                 font-semibold transition-all 
                 hover:bg-[var(--color-accent-dark)]

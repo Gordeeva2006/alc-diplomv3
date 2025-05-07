@@ -131,6 +131,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       getItemCount,
     }}>
       {children}
+      
     </CartContext.Provider>
   );
 }

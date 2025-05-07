@@ -55,7 +55,7 @@ const CollaborationStepsSection = () => {
                   <div className="relative">
                     <div className="bg-[var(--color-accent)] p-3 rounded-full flex items-center justify-center">
                       {React.cloneElement(step.icon, { 
-                        className: "w-5 h-5 text-[var(--color-white)]" 
+                        className: "w-5 h-5 text-white" 
                       })}
                     </div>
                     

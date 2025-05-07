@@ -1,3 +1,4 @@
+// src/app/api/products/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 import { pool } from '@/lib/db';
@@ -14,7 +15,7 @@ interface ProductRow {
   packaging_name: string | null;
   packaging_volume: number | null;
   packaging_unit: string | null;
-  packaging_image: string | null; // Поле изображения
+  packaging_image: string | null;
 }
 
 interface PackagingOption {
@@ -22,7 +23,7 @@ interface PackagingOption {
   name: string;
   volume: number;
   unit: string;
-  image: string | null; // Поле изображения
+  image: string | null;
 }
 
 interface Product {
@@ -37,10 +38,9 @@ interface Product {
 
 export async function GET() {
   try {
-    // Запрос к БД с фильтром по активным продуктам
     const [rows] = await pool.query<ProductRow[]>(`
       SELECT 
-        p.id AS product_id,
+        p.id AS product_id, 
         p.name AS product_name,
         p.description AS product_description,
         p.price_per_gram,
@@ -50,7 +50,7 @@ export async function GET() {
         pt.name AS packaging_name,
         pt.volume AS packaging_volume,
         pt.unit AS packaging_unit,
-        pt.image AS packaging_image -- Добавлено поле изображения
+        pt.image AS packaging_image
       FROM products p
       INNER JOIN categorys c ON p.category = c.id
       LEFT JOIN form_types f ON p.form_type = f.id
@@ -60,7 +60,6 @@ export async function GET() {
       ORDER BY p.id, pt.id
     `);
 
-    // Группировка продуктов с упаковками
     const productsMap = new Map<number, Product>();
     for (const row of rows) {
       const productId = row.product_id;
@@ -77,7 +76,6 @@ export async function GET() {
       }
       const product = productsMap.get(productId)!;
 
-      // Добавляем уникальные упаковки
       if (
         row.packaging_id &&
         !product.packagingOptions.some(pkg => pkg.id === row.packaging_id)
@@ -87,7 +85,7 @@ export async function GET() {
           name: row.packaging_name!,
           volume: row.packaging_volume!,
           unit: row.packaging_unit!,
-          image: row.packaging_image, // Добавлено поле изображения
+          image: row.packaging_image,
         });
       }
     }
