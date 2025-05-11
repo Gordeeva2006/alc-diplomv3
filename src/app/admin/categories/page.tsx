@@ -78,8 +78,8 @@ export default function CategoriesPage() {
       
       {/* Основной контент */}
       <main className="flex-grow p-6">
-        <div className="max-w-7xl mx-auto py-12 px-4 min-h-screen">
-          <div className="flex justify-between items-center mb-6">
+        <div className="max-w-9xl mx-auto  px-4 min-h-screen">
+          <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Управление категориями</h2>
             <button 
               onClick={() => setEditingCategory({ id: 0, name: '', description: '' })}

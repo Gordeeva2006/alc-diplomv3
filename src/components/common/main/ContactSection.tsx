@@ -48,7 +48,7 @@ const ContactSection = () => {
   return (
     <section className="py-8 bg-[var(--color-background)]">
       <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center text-[var(--color-accent)] mb-12">
+        <h2 className="text-4xl font-bold text-center text-[var(--color-accent)] mb-12" id='contact'>
           Есть вопрос? Задайте его нашей команде
         </h2>
         

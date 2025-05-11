@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
 
     const productIds = [...new Set(cart.items.map(item => item.productId))];
 
-    const [rows] = await pool.query(`
+    const [rows] = await pool.query<mysql.RowDataPacket[]>(`
       SELECT 
         p.id AS product_id,
         p.name AS product_name,
@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
         pt.name AS packaging_name,
         pt.volume AS packaging_volume,
         u.name AS packaging_unit_name, -- Получаем название единицы измерения
+        u.id AS packaging_unit_id,
         pt.image AS packaging_image -- Получаем изображение упаковки
       FROM products p
       LEFT JOIN product_packaging pp ON p.id = pp.product_id
@@ -74,6 +75,10 @@ export async function GET(req: NextRequest) {
       WHERE p.id IN (?)`,
       [productIds]
     );
+
+    if (!Array.isArray(rows)) {
+      return NextResponse.json([], { status: 200 });
+    }
 
     const enrichedItems = cart.items.map((item) => {
       const matchingRow = rows.find(
@@ -119,7 +124,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// --- POST: Добавление товара в корзину ---
+// --- POST: Добавление Продукции в корзину ---
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -134,7 +139,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Проверка существования продукта
-    const [productRows] = await pool.query(
+    const [productRows] = await pool.query<mysql.RowDataPacket[]>(
       'SELECT id FROM products WHERE id = ?', 
       [productId]
     );
@@ -163,7 +168,7 @@ export async function POST(req: NextRequest) {
         params = [productId, packagingId];
       }
 
-      const [packagingRows] = await pool.query(query, params);
+      const [packagingRows] = await pool.query<mysql.RowDataPacket[]>(query, params);
       if ((packagingRows as any[]).length === 0) {
         return NextResponse.json(
           { error: 'Упаковка не доступна для этого продукта' },
@@ -191,12 +196,12 @@ export async function POST(req: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Ошибка при добавлении товара:', error);
+    console.error('Ошибка при добавлении Продукции:', error);
     return NextResponse.json({ error: 'Не удалось добавить товар' }, { status: 500 });
   }
 }
 
-// --- PUT: Обновление количества товара ---
+// --- PUT: Обновление количества Продукции ---
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
@@ -229,7 +234,7 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// --- DELETE: Удаление товара из корзины ---
+// --- DELETE: Удаление Продукции из корзины ---
 export async function DELETE(req: NextRequest) {
   try {
     const body = await req.json();
@@ -243,12 +248,12 @@ export async function DELETE(req: NextRequest) {
       cart.items = cart.items.filter(
         item =>
           !(item.productId === productId &&
-            ((item.packaging_type_id === null && packagingId === null) ||
-             (item.packaging_type_id !== null && packagingId !== null && item.packaging_type_id === packagingId)))
+            ((item.packagingId === null && packagingId === null) ||
+             (item.packagingId !== null && packagingId !== null && item.packagingId === packagingId)))
       );
     });
   } catch (error) {
-    console.error('Ошибка при удалении товара:', error);
+    console.error('Ошибка при удалении Продукции:', error);
     return NextResponse.json({ error: 'Не удалось удалить товар' }, { status: 500 });
   }
 }

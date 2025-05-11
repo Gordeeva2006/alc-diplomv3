@@ -1,9 +1,20 @@
 import { NextRequest } from "next/server";
 import { pool } from "@/lib/db";
 
+interface PackagingType {
+  id: number;
+  name: string;
+  materialName: string | null;
+  volume: string; // Comes as string from DB
+  unitName: string | null;
+  image: string | null;
+}
+
 export async function GET(req: NextRequest) {
+  let connection = null;
+  
   try {
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
     const query = `
       SELECT 
         pt.id,
@@ -16,10 +27,11 @@ export async function GET(req: NextRequest) {
       LEFT JOIN materials m ON pt.material = m.id
       LEFT JOIN units u ON pt.unit = u.id
     `;
-    const [rows] = await connection.query(query);
+    
+    const [rows] = await connection.query<any[]>(query);
     connection.release();
 
-    const parsedRows = rows.map(row => ({
+    const parsedRows = rows.map((row: PackagingType) => ({
       ...row,
       volume: parseFloat(row.volume) || 0
     }));
@@ -34,5 +46,7 @@ export async function GET(req: NextRequest) {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
+  } finally {
+    if (connection) await connection.release();
   }
 }

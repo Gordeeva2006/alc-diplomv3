@@ -42,7 +42,7 @@ export async function GET(
       return NextResponse.json({ error: "Доступ запрещён" }, { status: 403 });
     }
 
-    // Получаем товары
+    // Получаем Продукцию
     const [items]: any = await pool.query(
       `SELECT oi.*, p.name AS product_name, pt.name AS packaging_name 
        FROM order_items oi

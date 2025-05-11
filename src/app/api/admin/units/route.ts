@@ -1,11 +1,23 @@
-// app/api/admin/units/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from "@/lib/db";
+import { RowDataPacket } from 'mysql2';
+
+// Типы данных
+interface CountResult extends RowDataPacket {
+  count: number;
+}
+
+// Проверка результата запроса COUNT
+function isCountResultArray(result: any): result is CountResult[] {
+  return Array.isArray(result) && 
+         result.every(item => typeof item === 'object' && 
+         item !== null && 'count' in item);
+}
 
 // Получение единиц измерения
 export async function GET() {
   try {
-    const [rows] = await pool.query('SELECT * FROM units ORDER BY name ASC');
+    const [rows] = await pool.query<RowDataPacket[]>('SELECT * FROM units ORDER BY name ASC');
     return NextResponse.json(rows);
   } catch (error) {
     console.error('Ошибка загрузки единиц измерения:', error);
@@ -22,7 +34,7 @@ export async function POST(request: NextRequest) {
     const { name } = await request.json();
     
     // Проверка на дубликаты
-    const [existing] = await pool.query(
+    const [existing] = await pool.query<RowDataPacket[]>(
       'SELECT id FROM units WHERE name = ?', 
       [name]
     );
@@ -53,15 +65,15 @@ export async function PUT(request: NextRequest) {
     const { name } = await request.json();
 
     // Проверка ID
-    if (!id) {
+    if (!id || Number.isNaN(id) || id <= 0) {
       return NextResponse.json(
-        { error: 'ID единицы не указан' },
+        { error: 'Некорректный ID единицы' },
         { status: 400 }
       );
     }
 
     // Проверка существования
-    const [existing] = await pool.query(
+    const [existing] = await pool.query<RowDataPacket[]>(
       'SELECT id FROM units WHERE id = ?', 
       [id]
     );
@@ -74,7 +86,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Проверка дубликатов
-    const [duplicateCheck] = await pool.query(
+    const [duplicateCheck] = await pool.query<RowDataPacket[]>(
       'SELECT id FROM units WHERE name = ? AND id != ?', 
       [name, id]
     );
@@ -87,12 +99,12 @@ export async function PUT(request: NextRequest) {
     }
 
     // Проверка использования в упаковках
-    const [usedInPackaging] = await pool.query(
+    const [usedInPackaging] = await pool.query<CountResult[]>(
       'SELECT COUNT(*) AS count FROM packaging_types WHERE unit = ?',
       [id]
     );
     
-    if (usedInPackaging && Array.isArray(usedInPackaging) && usedInPackaging[0].count > 0) {
+    if (isCountResultArray(usedInPackaging) && usedInPackaging[0].count > 0) {
       return NextResponse.json(
         { error: 'Нельзя редактировать единицу, которая используется в упаковках' },
         { status: 400 }
@@ -118,20 +130,20 @@ export async function DELETE(request: NextRequest) {
     const id = parseInt(url.searchParams.get('id') || '0');
 
     // Проверка ID
-    if (!id) {
+    if (!id || Number.isNaN(id) || id <= 0) {
       return NextResponse.json(
-        { error: 'ID единицы не указан' },
+        { error: 'Некорректный ID единицы' },
         { status: 400 }
       );
     }
 
     // Проверка использования в упаковках
-    const [usedInPackaging] = await pool.query(
+    const [usedInPackaging] = await pool.query<CountResult[]>(
       'SELECT COUNT(*) AS count FROM packaging_types WHERE unit = ?',
       [id]
     );
     
-    if (usedInPackaging && Array.isArray(usedInPackaging) && usedInPackaging[0].count > 0) {
+    if (isCountResultArray(usedInPackaging) && usedInPackaging[0].count > 0) {
       return NextResponse.json(
         { error: 'Нельзя удалить единицу, которая используется в упаковках' },
         { status: 400 }

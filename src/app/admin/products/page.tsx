@@ -1,8 +1,9 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import AdminHeader from '../AdminHeader';
+import Image from 'next/image';
 
 interface Product {
   id: number;
@@ -12,10 +13,10 @@ interface Product {
   category: number;
   form_type: number | null;
   is_active: number;
+  packaging_ids: string | null;
   packaging: number[];
   packaging_names: string | null;
 }
-
 interface Packaging {
   id: number;
   name: string;
@@ -24,17 +25,14 @@ interface Packaging {
   unit_name: string;
   volume: number;
 }
-
 interface Category {
   id: number;
   name: string;
 }
-
 interface FormType {
   id: number;
   name: string;
 }
-
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [packagings, setPackagings] = useState<Packaging[]>([]);
@@ -45,6 +43,8 @@ export default function ProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [modal, setModal] = useState<{ open: boolean; message: string }>({ open: false, message: '' });
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; productId: number | null }>({ open: false, productId: null });
 
   // Загрузка данных
   useEffect(() => {
@@ -59,24 +59,19 @@ export default function ProductsPage() {
         fetch('/api/admin/products?data=categories'),
         fetch('/api/admin/products?data=form_types')
       ]);
-
       if (!productsRes.ok || !packagingsRes.ok || !categoriesRes.ok || !formTypesRes.ok) {
         throw new Error('Ошибка загрузки данных');
       }
-
       const productsData = await productsRes.json();
       const packagingsData = await packagingsRes.json();
       const categoriesData = await categoriesRes.json();
       const formTypesData = await formTypesRes.json();
-
-      // Преобразуем packaging_ids в массив
-      const updatedProducts = productsData.map(product => ({
+      const updatedProducts = productsData.map((product: Product) => ({
         ...product,
         packaging: product.packaging_ids 
           ? product.packaging_ids.split(',').map(Number) 
           : [],
       }));
-
       setProducts(updatedProducts);
       setPackagings(packagingsData);
       setCategories(categoriesData);
@@ -91,94 +86,147 @@ export default function ProductsPage() {
   // Валидация перед сохранением
   const validateProduct = (product: Product) => {
     if (!product.name.trim()) {
-      alert('Введите название продукта');
+      setModal({ open: true, message: 'Введите название продукта' });
       return false;
     }
-    
     if (!product.price_per_gram || product.price_per_gram <= 0) {
-      alert('Цена должна быть больше нуля');
+      setModal({ open: true, message: 'Цена должна быть больше нуля' });
       return false;
     }
-    
     if (!product.category) {
-      alert('Выберите категорию');
+      setModal({ open: true, message: 'Выберите категорию' });
       return false;
     }
-    
     return true;
   };
 
   // Сохранение продукта
   const handleSave = async () => {
     if (!editingProduct) return;
-    
     if (!validateProduct(editingProduct)) {
       return;
     }
-
     try {
       const method = editingProduct.id ? 'PUT' : 'POST';
       const url = editingProduct.id 
         ? `/api/admin/products?id=${editingProduct.id}` 
         : '/api/admin/products';
-      
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingProduct)
       });
-      
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || 'Ошибка сохранения');
       }
-      
       fetchData();
       setEditingProduct(null);
     } catch (error) {
-      console.error('Ошибка сохранения товара:', error);
-      alert('Не удалось сохранить продукт. Пожалуйста, попробуйте снова.');
+      console.error('Ошибка сохранения Продукции:', error);
+      setModal({ open: true, message: 'Не удалось сохранить продукт. Пожалуйста, попробуйте снова.' });
     }
   };
 
   // Удаление продукта
   const handleDelete = async (id: number) => {
-    if (!confirm('Вы уверены, что хотите удалить этот продукт?')) return;
-    
+    setDeleteModal({ open: true, productId: id });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.productId) return;
     try {
-      const res = await fetch(`/api/admin/products?id=${id}`, {
+      const res = await fetch(`/api/admin/products?id=${deleteModal.productId}`, {
         method: 'DELETE'
       });
-      
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || 'Ошибка удаления');
       }
-      
       fetchData();
+      setDeleteModal({ open: false, productId: null });
     } catch (error) {
       console.error('Ошибка удаления продукта:', error);
-      alert('Не удалось удалить продукт');
+      setModal({ open: true, message: 'Не удалось удалить продукт' });
     }
   };
 
   // Фильтрация продуктов
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = !statusFilter || product.is_active === parseInt(statusFilter);
-    return matchesSearch && matchesStatus;
-  });
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = !statusFilter || product.is_active === parseInt(statusFilter);
+      return matchesSearch && matchesStatus;
+    });
+  }, [products, searchQuery, statusFilter]);
 
   return (
     <div className="bg-[var(--color-dark)] text-[var(--color-white)] min-h-screen flex flex-col">
+      {/* Modal */}
+      {modal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
+          <div className="bg-[var(--color-dark)] p-6 rounded-lg max-w-md w-full mx-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Ошибка</h3>
+              <button 
+                onClick={() => setModal({ open: false, message: '' })}
+                className="text-gray-400 hover:text-white"
+              >
+                &times;
+              </button>
+            </div>
+            <p className="text-white">{modal.message}</p>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setModal({ open: false, message: '' })}
+                className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:bg-opacity-90"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
+          <div className="bg-[var(--color-dark)] p-6 rounded-lg max-w-md w-full mx-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Подтверждение удаления</h3>
+              <button 
+                onClick={() => setDeleteModal({ open: false, productId: null })}
+                className="text-gray-400 hover:text-white"
+              >
+                &times;
+              </button>
+            </div>
+            <p className="text-white">Вы уверены, что хотите удалить этот продукт?</p>
+            <div className="mt-6 flex justify-end space-x-4">
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-[var(--color-accent)] text-[var(--color-dark)] rounded hover:bg-opacity-90"
+              >
+                ОК
+              </button>
+              <button
+                onClick={() => setDeleteModal({ open: false, productId: null })}
+                className="px-4 py-2 bg-[var(--color-gray)] text-[var(--color-dark)] rounded hover:bg-opacity-90"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <AdminHeader />
-      
       {/* Основной контент */}
       <main className="flex-grow p-6">
-        <div className="max-w-7xl mx-auto py-12 px-4 min-h-screen">
+        <div className="max-w-9xl mx-auto py-12 px-4 min-h-screen">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Управление товарами</h1>
+            <h1 className="text-3xl font-bold">Управление продукцией</h1>
             <div className="flex space-x-4">
               <input
                 type="text"
@@ -205,6 +253,7 @@ export default function ProductsPage() {
                   category: 0,
                   form_type: null,
                   is_active: 1,
+                  packaging_ids: '',
                   packaging: [],
                   packaging_names: null
                 })}
@@ -214,7 +263,6 @@ export default function ProductsPage() {
               </button>
             </div>
           </div>
-          
           {/* Таблица продуктов */}
           {isLoading ? (
             <div className="flex justify-center py-12">
@@ -251,7 +299,7 @@ export default function ProductsPage() {
                       <tr key={product.id} className="hover:bg-[var(--color-gray)] transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">{product.id}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{product.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{product.price_per_gram} ₽</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{product.price_per_gram} <span className='text-lg font-light'>₽</span></td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {categories.find(c => c.id === product.category)?.name || 'Неизвестная категория'}
                         </td>
@@ -265,7 +313,12 @@ export default function ProductsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-pre-line">
-                          {product.packaging_names?.replace(/<br\s*\/?>/g, '\n') || '-'}
+                          {product.packaging_names?.split('<br>').map((line, idx) => (
+                            <span key={idx}>
+                              {line}
+                              <br />
+                            </span>
+                          )) || '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
                           <button 
@@ -288,7 +341,6 @@ export default function ProductsPage() {
               </table>
             </div>
           )}
-          
           {/* Модальное окно редактирования */}
           {editingProduct && (
             <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4 overflow-y-auto">
@@ -296,7 +348,6 @@ export default function ProductsPage() {
                 <h2 className="text-2xl font-bold mb-6 border-b border-[var(--color-gray)] pb-3">
                   {editingProduct.id ? 'Редактировать товар' : 'Добавить товар'}
                 </h2>
-                
                 <div className="space-y-6 mb-6">
                   <div>
                     <label className="block mb-2 text-sm font-medium">Название</label>
@@ -310,7 +361,6 @@ export default function ProductsPage() {
                       className="w-full px-4 py-2 border rounded-lg bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                     />
                   </div>
-                  
                   <div>
                     <label className="block mb-2 text-sm font-medium">Описание</label>
                     <textarea
@@ -323,7 +373,6 @@ export default function ProductsPage() {
                       rows={3}
                     />
                   </div>
-                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block mb-2 text-sm font-medium">Цена за грамм</label>
@@ -339,7 +388,6 @@ export default function ProductsPage() {
                         className="w-full px-4 py-2 border rounded-lg bg-[var(--color-dark)] text-[var(--color-white)] border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                       />
                     </div>
-                    
                     <div>
                       <label className="block mb-2 text-sm font-medium">Категория</label>
                       <select
@@ -355,7 +403,6 @@ export default function ProductsPage() {
                         ))}
                       </select>
                     </div>
-                    
                     <div>
                       <label className="block mb-2 text-sm font-medium">Тип формы</label>
                       <select
@@ -372,7 +419,6 @@ export default function ProductsPage() {
                         ))}
                       </select>
                     </div>
-                    
                     <div>
                       <label className="block mb-2 text-sm font-medium">Статус</label>
                       <div className="flex items-center mt-1">
@@ -392,7 +438,6 @@ export default function ProductsPage() {
                       </div>
                     </div>
                   </div>
-                  
                   <div>
                     <label className="block mb-2 text-sm font-medium">Доступные упаковки</label>
                     <div className="max-h-60 overflow-y-auto border border-[var(--color-gray)] rounded p-4 bg-[var(--color-dark)]">
@@ -402,7 +447,7 @@ export default function ProductsPage() {
                         packagings.map(pkg => {
                           const isChecked = editingProduct.packaging.includes(pkg.id);
                           return (
-                            <div key={pkg.id} className="flex  items-center p-2 hover:bg-[var(--color-gray)] rounded">
+                            <div key={pkg.id} className="flex items-center p-2 hover:bg-[var(--color-gray)] rounded">
                               <input
                                 type="checkbox"
                                 id={`pkg-${pkg.id}`}
@@ -419,18 +464,26 @@ export default function ProductsPage() {
                                 className="w-5 h-5 rounded mr-3 bg-[var(--color-dark)] border-[var(--color-gray)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                               />
                               <label htmlFor={`pkg-${pkg.id}`} className="flex-1">
-                                <div className="flex items-center">
-                                  {pkg.image && (
-                                    <img 
-                                      src={pkg.image} 
-                                      alt={'-'} 
-                                      className="w-8 h-8 object-cover rounded mr-2"
+                                <div className="flex items-center gap-2">
+                                  {pkg.image ? (
+                                    <Image
+                                      src={`/${pkg.image}`}
+                                      alt={pkg.name}
+                                      width={32}
+                                      height={32}
+                                      className="w-8 h-8 object-cover rounded"
                                     />
+                                  ) : (
+                                    <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                                      <span className="text-xs">No Image</span>
+                                    </div>
                                   )}
-                                  <span>{pkg.name}</span>
-                                  <span className="ml-2 text-[var(--color-gray)]">
-                                    ({pkg.volume} {pkg.unit_name})
-                                  </span>
+                                  <div>
+                                    <span>{pkg.name}</span>
+                                    <span className="ml-2 text-[var(--color-gray)]">
+                                      ({pkg.volume} {pkg.unit_name})
+                                    </span>
+                                  </div>
                                 </div>
                               </label>
                             </div>
@@ -440,7 +493,6 @@ export default function ProductsPage() {
                     </div>
                   </div>
                 </div>
-                
                 <div className="flex justify-end space-x-4 pt-4 border-t border-[var(--color-gray)]">
                   <button
                     onClick={() => setEditingProduct(null)}
@@ -460,7 +512,6 @@ export default function ProductsPage() {
           )}
         </div>
       </main>
-      
       {/* Footer */}
       <Footer />
     </div>

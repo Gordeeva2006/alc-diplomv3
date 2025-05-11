@@ -1,101 +1,99 @@
 // src/lib/auth.ts
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { pool } from "@/lib/db"
+import mysql from "mysql2/promise"
 import bcrypt from "bcryptjs"
+
+// Тип пользователя
+type User = {
+  id: number
+  email: string
+  role: number
+  phone: string | null
+}
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || "127.0.0.1",
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "albumen_development",
+})
 
 export const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" }
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email и пароль обязательны")
+        }
 
         try {
           const [rows] = await pool.query(
-            `SELECT users.*, roles.name as role_name 
-             FROM users 
-             LEFT JOIN roles ON users.role = roles.id 
-             WHERE email = ?`,
+            "SELECT id, email, password_hash, role, phone FROM users WHERE email = ?",
             [credentials.email]
           )
 
-          const user = rows[0]
-          
-          if (!user) return null
-          
-          const isValid = await bcrypt.compare(
-            credentials.password, 
-            user.password_hash
-          )
+          const users = rows as Array<{
+            id: number
+            email: string
+            password_hash: string
+            role: number
+            phone: string | null
+          }>
 
-          if (!isValid) return null
+          if (users.length === 0) {
+            throw new Error("Пользователь не найден")
+          }
+
+          const user = users[0]
+          const isValid = await bcrypt.compare(credentials.password, user.password_hash)
+
+          if (!isValid) {
+            throw new Error("Неверный пароль")
+          }
 
           return {
-            id: user.id.toString(),
+            id: user.id,
             email: user.email,
-            phone: user.phone,
-            role: user.role_name,
-            client: {
-              id: user.client_id,
-              phone: user.client_phone,
-              legalAddress: user.legal_address,
-              type: user.client_type,
-              individual: user.individual
-                ? {
-                    inn: user.individual.inn,
-                    companyName: user.individual.company_name,
-                    ogrnip: user.individual.ogrnip
-                  }
-                : undefined,
-              legalEntity: user.legal_entity
-                ? {
-                    inn: user.legal_entity.inn,
-                    companyName: user.legal_entity.company_name,
-                    kpp: user.legal_entity.kpp,
-                    ogrn: user.legal_entity.ogrn
-                  }
-                : undefined
-            }
-          }
+            role: user.role,
+            phone: user.phone || null
+          } as User
         } catch (error) {
-          console.error("Auth error:", error)
+          console.error("Ошибка аутентификации:", error)
           return null
         }
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.phone = user.phone
+        token.email = user.email
         token.role = user.role
-        token.client = user.client
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id
-        session.user.phone = token.phone
-        session.user.role = token.role
-        session.user.client = token.client
+        session.user.id = token.id as string
+        session.user.email = token.email as string
+        session.user.role = token.role as number
       }
       return session
-    }
+    },
   },
   pages: {
-    main: "/",
-    error: "/auth/error"
+    signIn: "/login",
   },
   session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60 // 30 дней
+    strategy: "jwt" as const,
   },
-  secret: process.env.NEXTAUTH_SECRET
+  secret: process.env.NEXTAUTH_SECRET,
 }

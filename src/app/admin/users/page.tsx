@@ -218,7 +218,7 @@ export default function UsersPage() {
     <main className='flex flex-col min-h-screen'>
       <AdminHeader />
         <div className="p-6 flex-grow ">
-          <div className='mx-auto max-w-7xl'>
+          <div className='mx-auto max-w-9xl'>
               <div className="flex justify-between  mb-6">
                 <h1 className="text-2xl font-bold text-white">Управление пользователями</h1>
                 <div className="flex gap-4">

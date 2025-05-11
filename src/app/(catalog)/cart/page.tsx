@@ -204,11 +204,11 @@ export default function CartPage() {
 
   if (loading)
     return (
-      <div>
+      <div className='flex flex-col min-h-screen'>
         <Header />
-        <div className="container mx-auto px-4 py-8 min-h-screen">
-          Загрузка...
-        </div>
+        <main className="flex justify-center items-center h-64 flex-grow">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C09D6A]"></div>
+        </main>
         <Footer />
       </div>
     );
@@ -217,12 +217,15 @@ export default function CartPage() {
     return (
       <div className='flex flex-col min-h-screen'>
         <Header />
-        <div className="container mx-auto py-8 flex-grow max-w-7xl">
-          <h1 className="text-3xl font-bold mb-8">Заявка пуста</h1>
-          <Link href="/products" className="text-accent hover:underline">
-            Перейти к продукции
-          </Link>
-        </div>
+        <main className='flex-grow'>
+          <div className="container mx-auto py-8  max-w-7xl">
+            <h1 className="text-3xl text-white font-bold mb-8">Заявка пуста</h1>
+            <Link href="/products" className="text-accent hover:underline">
+              Перейти к продукции
+            </Link>
+          </div>
+        </main>
+
         <Footer />
       </div>
     );
@@ -238,159 +241,162 @@ export default function CartPage() {
   return (
     <div className='flex flex-col min-h-screen'>
       <Header />
-      <div className="container mx-auto py-8 flex-grow max-w-7xl">
-        <h1 className="text-3xl font-bold mb-8 text-white">Формирование заявки</h1>
-        <div className="space-y-4">
-          {cartItems.map((item) => (
-            <div
-              key={`${item.product_id}-${item.packaging_type_id ?? 'none'}`}
-              className="bg-dark rounded-lg p-4 mb-4"
-            >
-              <div className="flex items-start gap-4">
-                {item.packaging_image && (
-                  <img
-                    src={item.packaging_image}
-                    alt={item.packaging_name || 'Упаковка'}
-                    className="w-24 h-24 object-cover rounded"
-                  />
-                )}
-                <div>
-                  <h2 className="text-xl font-semibold">{item.product_name}</h2>
-                  {item.packaging_name && item.volume && item.unit_name && (
-                    <p>
-                      Упаковка: {item.packaging_name} ({item.volume}
-                      {item.unit_name})
-                    </p>
+      <main className='flex-grow'>
+          <div className="container mx-auto py-8  max-w-7xl">
+          <h1 className="text-3xl font-bold mb-8 text-white">Формирование заявки</h1>
+          <div className="space-y-4">
+            {cartItems.map((item) => (
+              <div
+                key={`${item.product_id}-${item.packaging_type_id ?? 'none'}`}
+                className="bg-dark rounded-lg p-4 mb-4"
+              >
+                <div className="flex items-start gap-4">
+                  {item.packaging_image && (
+                    <img
+                      src={item.packaging_image}
+                      alt={item.packaging_name || 'Упаковка'}
+                      className="w-24 h-24 object-cover rounded"
+                    />
                   )}
-                  <p>Цена за единицу: {formatPrice(item.unit_price)} ₽</p>
+                  <div>
+                    <h2 className="text-xl font-semibold">{item.product_name}</h2>
+                    {item.packaging_name && item.volume && item.unit_name && (
+                      <p>
+                        Упаковка: {item.packaging_name} ({item.volume}
+                        {item.unit_name})
+                      </p>
+                    )}
+                    <p>Цена за единицу: {formatPrice(item.unit_price)} <span className='text-lg font-light'>₽</span></p>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-between items-center">
+                  <div className="flex items-center gap-1 bg-accent/20 p-1 rounded-full text-sm">
+                    {/* Кнопки -250 и -50 */}
+                    <button
+                      onClick={() =>
+                        adjustQuantity(
+                          item.product_id,
+                          item.packaging_type_id,
+                          item.quantity - 250
+                        )
+                      }
+                      className="bg-white text-black px-2 py-1 rounded-full hover:bg-gray-200 transition-colors  min-w-[40px]"
+                    >
+                      -250
+                    </button>
+                    <button
+                      onClick={() =>
+                        adjustQuantity(
+                          item.product_id,
+                          item.packaging_type_id,
+                          item.quantity - 50
+                        )
+                      }
+                      className="bg-white text-black px-2 py-1 rounded-full hover:bg-gray-200 transition-colors  min-w-[30px]"
+                    >
+                      -50
+                    </button>
+
+                    {/* Поле ввода количества */}
+                    <input
+                      type="number"
+                      min="0"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        handleQuantityChange(
+                          item.product_id,
+                          item.packaging_type_id,
+                          e.target.value
+                        )
+                      }
+                      onBlur={() =>
+                        validateQuantity(
+                          item.product_id,
+                          item.packaging_type_id,
+                          item.quantity
+                        )
+                      }
+                      className="w-20 px-3 py-1 bg-accent text-white rounded-full text-center focus:outline-none focus:ring-2 focus:ring-white/50 text-xl"
+                    />
+
+                    {/* Кнопки +50 и +250 */}
+                    <button
+                      onClick={() =>
+                        adjustQuantity(
+                          item.product_id,
+                          item.packaging_type_id,
+                          item.quantity + 50
+                        )
+                      }
+                      className="bg-white text-black px-2 py-1 rounded-full hover:bg-gray-200 transition-colors  min-w-[30px]"
+                    >
+                      +50
+                    </button>
+                    <button
+                      onClick={() =>
+                        adjustQuantity(
+                          item.product_id,
+                          item.packaging_type_id,
+                          item.quantity + 250
+                        )
+                      }
+                      className="bg-white text-black px-2 py-1 rounded-full hover:bg-gray-200 transition-colors  min-w-[40px]"
+                    >
+                      +250
+                    </button>
+                  </div>
+
+                  <div className="text-right"> 
+                    <p className="font-bold text-xl">
+                      {formatPrice(item.unit_price)}<span className='text-lg font-light'>₽</span> * {item.quantity}уп. = {formatPrice(item.unit_price * item.quantity)} <span className='text-lg font-light'>₽</span>
+                    </p>
+                    <button
+                      onClick={() =>
+                        removeFromCart(item.product_id, item.packaging_type_id)
+                      }
+                      className="text-red-600 hover:text-red-800 mt-2 text-sm"
+                    >
+                      Удалить
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="mt-4 flex justify-between items-center">
-                <div className="flex items-center gap-1 bg-accent/20 p-1 rounded-full">
-                  {/* Кнопки -250 и -50 */}
-                  <button
-                    onClick={() =>
-                      adjustQuantity(
-                        item.product_id,
-                        item.packaging_type_id,
-                        item.quantity - 250
-                      )
-                    }
-                    className="bg-white text-black px-2 py-1 rounded-full hover:bg-gray-200 transition-colors text-xs min-w-[40px]"
-                  >
-                    -250
-                  </button>
-                  <button
-                    onClick={() =>
-                      adjustQuantity(
-                        item.product_id,
-                        item.packaging_type_id,
-                        item.quantity - 50
-                      )
-                    }
-                    className="bg-white text-black px-2 py-1 rounded-full hover:bg-gray-200 transition-colors text-xs min-w-[30px]"
-                  >
-                    -50
-                  </button>
+            ))}
 
-                  {/* Поле ввода количества */}
-                  <input
-                    type="number"
-                    min="0"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      handleQuantityChange(
-                        item.product_id,
-                        item.packaging_type_id,
-                        e.target.value
-                      )
-                    }
-                    onBlur={() =>
-                      validateQuantity(
-                        item.product_id,
-                        item.packaging_type_id,
-                        item.quantity
-                      )
-                    }
-                    className="w-20 px-3 py-1 bg-accent text-white rounded-full text-center focus:outline-none focus:ring-2 focus:ring-white/50 text-sm"
-                  />
-
-                  {/* Кнопки +50 и +250 */}
-                  <button
-                    onClick={() =>
-                      adjustQuantity(
-                        item.product_id,
-                        item.packaging_type_id,
-                        item.quantity + 50
-                      )
-                    }
-                    className="bg-white text-black px-2 py-1 rounded-full hover:bg-gray-200 transition-colors text-xs min-w-[30px]"
-                  >
-                    +50
-                  </button>
-                  <button
-                    onClick={() =>
-                      adjustQuantity(
-                        item.product_id,
-                        item.packaging_type_id,
-                        item.quantity + 250
-                      )
-                    }
-                    className="bg-white text-black px-2 py-1 rounded-full hover:bg-gray-200 transition-colors text-xs min-w-[40px]"
-                  >
-                    +250
-                  </button>
-                </div>
-
-                <div className="text-right">
-                  <p className="font-bold text-xl">
-                    {formatPrice(item.unit_price)}₽ * {item.quantity}уп. = {formatPrice(item.unit_price * item.quantity)} ₽
-                  </p>
-                  <button
-                    onClick={() =>
-                      removeFromCart(item.product_id, item.packaging_type_id)
-                    }
-                    className="text-red-600 hover:text-red-800 mt-2 text-sm"
-                  >
-                    Удалить
-                  </button>
-                </div>
-              </div>
+            <div className="mt-6 flex justify-between text-white">
+              <span className="text-xl font-bold">Общая сумма:</span>
+              <span className="text-xl font-bold text-accent">
+                {formatPrice(totalAmount)} <span className='text-lg font-light'>₽</span>
+              </span>
             </div>
-          ))}
 
-          <div className="mt-6 flex justify-between text-white">
-            <span className="text-xl font-bold">Общая сумма:</span>
-            <span className="text-xl font-bold text-accent">
-              {formatPrice(totalAmount)} ₽
-            </span>
-          </div>
-
-          <p className="text-white">
-            Информация, представленная на сайте, не является публичной офертой.
-            Все цены указаны как предложение для обсуждения и могут быть изменены
-            до момента заключения договора.
-          </p>
-
-          {isOrderDisabled && (
-            <p className="text-red-600 mt-2">
-              Минимальная сумма заявки: 800 000 ₽
+            <p className="text-white">
+              Информация, представленная на сайте, не является публичной офертой.
+              Все цены указаны как предложение для обсуждения и могут быть изменены
+              до момента заключения договора.
             </p>
-          )}
 
-          <div className="mt-8">
-            <button
-              className={`bg-accent text-white px-6 py-3 rounded font-bold w-full sm:w-auto ${
-                isOrderDisabled ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-              disabled={isOrderDisabled}
-              onClick={handleSubmitOrder}
-            >
-              Оформить заявку
-            </button>
+            {isOrderDisabled && (
+              <p className="text-red-600 mt-2">
+                Минимальная сумма заявки: 800 000 <span className='text-lg font-light'>₽</span>
+              </p>
+            )}
+
+            <div className="mt-8">
+              <button
+                className={`bg-accent text-white px-6 py-3 rounded font-bold w-full sm:w-auto ${
+                  isOrderDisabled ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                disabled={isOrderDisabled}
+                onClick={handleSubmitOrder}
+              >
+                Оформить заявку
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
+      
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

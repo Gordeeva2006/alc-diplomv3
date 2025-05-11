@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-// Типизация товара в корзине
+// Типизация Продукции в корзине
 interface CartItem {
   productId: number;
   packagingId: number | null;
@@ -61,7 +61,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCartToCookies(cartItems);
   }, [cartItems]);
 
-  // Добавление товара в корзину
+  // Добавление Продукции в корзину
   const addToCart = (productId: number, packagingId: number | null, quantity: number) => {
     quantity = Math.max(quantity, 200); // минимальное количество
 
@@ -84,7 +84,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // Обновление количества товара
+  // Обновление количества Продукции
   const updateQuantity = (productId: number, packagingId: number | null, quantity: number) => {
     quantity = Math.max(quantity, 200); // минимальное количество
 
@@ -99,7 +99,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  // Удаление товара из корзины
+  // Удаление Продукции из корзины
   const removeFromCart = (productId: number, packagingId: number | null) => {
     setCartItems(prev =>
       prev.filter(
@@ -131,7 +131,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       getItemCount,
     }}>
       {children}
-      
     </CartContext.Provider>
   );
 }

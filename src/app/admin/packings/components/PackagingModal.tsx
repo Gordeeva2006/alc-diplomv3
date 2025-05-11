@@ -1,27 +1,31 @@
-import { Packaging, Material, Unit } from '@/app/admin/packings/types';
+import { Packaging, Material, Unit, FormType } from '@/app/admin/packings/types';
 
 interface Props {
   editingPacking: Packaging | null;
   materials: Material[];
   units: Unit[];
+  formTypes: FormType[]; // ✅ Добавлено
   imagePreview: string | null;
   handleMaterialChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   handleUnitChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  handleFormTypeChange: (e: React.ChangeEvent<HTMLSelectElement>) => void; // ✅ Добавлено
   handleImageUpload: (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLDivElement>) => void;
   handleButtonClick: () => void;
   handleSave: () => void;
   setEditingPacking: React.Dispatch<React.SetStateAction<Packaging | null>>;
   setImagePreview: React.Dispatch<React.SetStateAction<string | null>>;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>; // Исправлено на | null
 }
 
 export default function PackagingModal({
   editingPacking,
   materials,
   units,
+  formTypes, // ✅ Добавлено
   imagePreview,
   handleMaterialChange,
   handleUnitChange,
+  handleFormTypeChange, // ✅ Добавлено
   handleImageUpload,
   handleButtonClick,
   handleSave,
@@ -91,6 +95,20 @@ export default function PackagingModal({
                 <option value="">Не выбрано</option>
                 {units.map(unit => (
                   <option key={unit.id} value={unit.id}>{unit.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-sm font-medium">Тип формы</label>
+              <select 
+                value={editingPacking.form_type_id || ''}
+                onChange={handleFormTypeChange} // ✅ Добавлено
+                className="w-full px-4 py-2 border rounded-lg bg-[var(--color-dark)] text-white border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              >
+                <option value="">Не выбрано</option>
+                {formTypes.map(formType => ( // ✅ Используется
+                  <option key={formType.id} value={formType.id}>{formType.name}</option>
                 ))}
               </select>
             </div>

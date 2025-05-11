@@ -37,6 +37,7 @@ interface Order {
   legal_company: string | null;
   legal_inn: string | null;
   legal_kpp: string | null;
+  legal_ogrn: string | null;
   individual_company: string | null;
   individual_inn: string | null;
   individual_ogrnip: string | null;
@@ -94,14 +95,18 @@ export default function OrdersPage() {
     setModalOrder(null);
   };
 
-  if (loading) {
+  // Рендеринг
+  if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Загрузка заказов...</p>
+      <div className='flex flex-col min-h-screen'>
+        <Header />
+        <main className="flex justify-center items-center h-64 flex-grow">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C09D6A]"></div>
+        </main>
+        <Footer />
       </div>
     );
-  }
-
+    
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -124,9 +129,9 @@ export default function OrdersPage() {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-1 flex items-center justify-center p-4">
-          <div className="w-fit max-w-2xl max-h-[80vh] overflow-auto bg-gray-100 rounded-lg shadow-md p-6 text-center">
-            <h2 className="text-xl font-bold mb-4">У вас нет заказов</h2>
-            <p className="mb-4">Перейдите в каталог, чтобы оформить первый заказ.</p>
+          <div className="w-fit max-w-2xl max-h-[80vh] overflow-auto bg-gray rounded-lg shadow-md p-6 text-center">
+            <h2 className="text-xl text-accent font-bold mb-4">У вас нет заказов</h2>
+            <p className="mb-4 text-white">Перейдите в каталог, чтобы оформить первый заказ.</p>
             <button
               onClick={() => router.push("/products")}
               className="bg-accent px-6 py-3 rounded hover:bg-accent-dark transition-colors"
@@ -161,7 +166,7 @@ export default function OrdersPage() {
                   <tr key={order.id} className="border-b border-[var(--color-accent)]">
                     <td className="p-3">{order.id}</td>
                     <td className="p-3">{new Date(order.created_at).toLocaleDateString()}</td>
-                    <td className="p-3">{Number(order.total_amount).toFixed(2)} ₽</td>
+                    <td className="p-3">{Number(order.total_amount).toFixed(2)} <span className='text-lg font-light'>₽</span></td>
                     <td className="p-3">
                       <span
                         className={`px-3 py-1 rounded-full text-sm ${
@@ -208,7 +213,7 @@ export default function OrdersPage() {
         {/* Модальное окно */}
         {modalOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-dark p-6 rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-dark p-6 rounded-lg shadow-lg max-w-7xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">Детали заявки #{modalOrder.id}</h2>
                 <button
@@ -246,6 +251,7 @@ export default function OrdersPage() {
                       <p><strong>Наименование:</strong> {modalOrder.legal_company}</p>
                       <p><strong>ИНН:</strong> {modalOrder.legal_inn}</p>
                       <p><strong>КПП:</strong> {modalOrder.legal_kpp}</p>
+                      <p><strong>ОГРН:</strong> {modalOrder.legal_ogrn}</p>
                     </>
                   ) : (
                     <>
@@ -294,7 +300,7 @@ export default function OrdersPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Дополнительная информация</h3>
                   <p><strong>Дата создания:</strong> {new Date(modalOrder.created_at).toLocaleString()}</p>
-                  <p><strong>Статус:</strong> 
+                  <p className="pt-2"><strong>Статус:</strong> 
                     <span className={`ml-2 px-3 py-1 rounded-full text-sm ${
                       modalOrder.status_name === "Подтверждено"
                         ? "bg-green-100 text-green-800"
@@ -312,7 +318,7 @@ export default function OrdersPage() {
                 </div>
               </div>
 
-              <h3 className="text-xl font-semibold mb-4">Товары в заказе</h3>
+              <h3 className="text-xl font-semibold mb-4">Продукция в заказе</h3>
               
               <div className="overflow-x-auto mb-6">
                 <table className="w-full">
@@ -336,9 +342,9 @@ export default function OrdersPage() {
                           {item.packaging_volume ? ` (${item.packaging_volume} мл)` : ''}
                         </td>
                         <td className="py-3">{item.quantity}</td>
-                        <td className="py-3">{Number(item.unit_price).toFixed(2)} ₽</td>
+                        <td className="py-3">{Number(item.unit_price).toFixed(2)} <span className='text-lg font-light'>₽</span></td>
                         <td className="py-3 font-bold">
-                          {(Number(item.unit_price) * item.quantity).toFixed(2)} ₽
+                          {(Number(item.unit_price) * item.quantity).toFixed(2)} <span className='text-lg font-light'>₽</span>
                         </td>
                       </tr>
                     ))}
@@ -346,7 +352,7 @@ export default function OrdersPage() {
                   <tfoot>
                     <tr className="border-t border-gray-300">
                       <td colSpan={4} className="py-3 text-right font-semibold">Общая сумма:</td>
-                      <td className="py-3 font-bold text-lg">{Number(modalOrder.total_amount).toFixed(2)} ₽</td>
+                      <td className="py-3 font-bold text-lg">{Number(modalOrder.total_amount).toFixed(2)} <span className='text-lg font-light'>₽</span></td>
                     </tr>
                   </tfoot>
                 </table>

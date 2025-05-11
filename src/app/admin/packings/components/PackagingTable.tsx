@@ -1,6 +1,7 @@
 // src\app\admin\packings\components\PackagingTable.tsx
 'use client';
 import { Packaging } from '@/app/admin/packings/types';
+import Image from 'next/image';
 
 interface Props {
   packagings: Packaging[];
@@ -43,11 +44,13 @@ export default function PackagingTable({
                 <td className="px-6 py-4 whitespace-nowrap">{packing.unit_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {packing.image && (
-                    <img 
-                      src={packing.image} 
-                      alt={packing.name} 
-                      className="w-10 h-10 object-cover rounded"
-                    />
+                     <Image
+                                      src={`/${packing.image}`}
+                                      alt={packing.name}
+                                      width={64}
+                                      height={64}
+                                      className="w-16 h-16 object-cover rounded"
+                                    />
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">

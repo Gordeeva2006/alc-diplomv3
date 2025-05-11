@@ -77,13 +77,15 @@ export const PromoSection = ({
           <div className="text-white mb-8 md:mb-0 md:mr-8">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{title}</h2>
             <p className="text-xl mb-4">{description}</p>
-            <button className="bg-[#2C2C31] hover:bg-gray-700 text-white 
+            <a className="bg-[#2C2C31] hover:bg-gray-700 text-white 
                               font-semibold py-3 px-8 border-2 border-[#C09D6A]
                               transition-all duration-300 rounded-lg 
                               whitespace-nowrap focus:outline-none focus:ring-2 
-                              focus:ring-[#C09D6A] focus:ring-offset-2">
+                              focus:ring-[#C09D6A] focus:ring-offset-2"
+                              href='#contact'>
               {buttonText}
-            </button>
+              
+            </a>
           </div>
           <CountdownTimer deadline={deadline} />
         </div>

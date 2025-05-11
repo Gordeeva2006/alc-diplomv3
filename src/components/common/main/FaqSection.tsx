@@ -19,7 +19,7 @@ const FaqSection = () => {
           
           <p className="text-[var(--color-gray)] mb-4">
             Мы сотрудничаем с проверенной транспортной компанией "Деловые линии", которая обеспечивает надёжную доставку в любой регион.
-            Все наши заказы застрахованы на полную стоимость. При получении обязательно проверяйте целостность упаковки и соответствие товара заказу.
+            Все наши заказы застрахованы на полную стоимость. При получении обязательно проверяйте целостность упаковки и соответствие Продукции заказу.
           </p>
 
           <h3 className="text-lg font-semibold text-white mb-2">Сроки доставки:</h3>
@@ -116,7 +116,7 @@ const FaqSection = () => {
         <>
           <div className="flex items-center space-x-4 mb-4">
             <BsArrowReturnLeft className="text-[var(--color-accent)] text-2xl" />
-            <span className="text-xl font-bold text-white">Возврат товара</span>
+            <span className="text-xl font-bold text-white">Возврат Продукции</span>
           </div>
           
           <p className="text-[var(--color-gray)] mb-4">

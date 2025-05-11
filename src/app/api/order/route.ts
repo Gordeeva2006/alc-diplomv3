@@ -30,7 +30,7 @@ function getCartFromCookie(req: NextRequest): CartData {
         typeof item.quantity === "number" &&
         item.quantity > 0
       )
-      .filter((item) => item.productId > 0 && item.quantity > 0);
+      .filter((item: CartItem) => item.productId > 0 && item.quantity > 0);
 
     return { items: validItems };
   } catch (e) {
@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
     let totalAmount = 0;
     const now = new Date().toISOString().slice(0, 19).replace("T", " ");
 
-    
     const [orderResult] = await connection.query(
       `INSERT INTO orders (client_id, status, created_at) VALUES (?, ?, ?)`,
       [clientId, 1, now]

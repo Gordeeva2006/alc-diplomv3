@@ -205,9 +205,6 @@ export default function Header() {
               aria-label="Корзина"
             >
               <FaShoppingCart className="text-2xl text-white" />
-              <span className="absolute -top-1 -right-1 bg-accent text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                0
-              </span>
             </Link>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

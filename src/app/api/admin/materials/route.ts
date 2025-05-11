@@ -1,6 +1,16 @@
-// app/api/admin/materials/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from "@/lib/db";
+import { RowDataPacket } from 'mysql2';
+
+interface CountResult extends RowDataPacket {
+  count: number;
+}
+
+function isCountResultArray(result: any): result is CountResult[] {
+  return Array.isArray(result) && 
+         result.every(item => typeof item === 'object' && 
+         item !== null && 'count' in item);
+}
 
 // Получение материалов
 export async function GET() {
@@ -22,8 +32,8 @@ export async function POST(request: NextRequest) {
     const { name } = await request.json();
     
     // Проверка на дубликаты
-    const [existing] = await pool.query(
-      'SELECT id FROM materials WHERE name = ?',
+    const [existing] = await pool.query<RowDataPacket[]>(
+      'SELECT id FROM materials WHERE name = ?', 
       [name]
     );
     
@@ -52,16 +62,16 @@ export async function PUT(request: NextRequest) {
     const id = parseInt(url.searchParams.get('id') || '0');
     const { name } = await request.json();
     
-    if (!id) {
+    if (!id || Number.isNaN(id) || id <= 0) {
       return NextResponse.json(
-        { error: 'ID материала не указан' },
+        { error: 'Некорректный ID материала' },
         { status: 400 }
       );
     }
     
     // Проверка существования материала
-    const [existing] = await pool.query(
-      'SELECT id FROM materials WHERE id = ?',
+    const [existing] = await pool.query<RowDataPacket[]>(
+      'SELECT id FROM materials WHERE id = ?', 
       [id]
     );
     
@@ -73,8 +83,8 @@ export async function PUT(request: NextRequest) {
     }
     
     // Проверка на дубликаты
-    const [duplicateCheck] = await pool.query(
-      'SELECT id FROM materials WHERE name = ? AND id != ?',
+    const [duplicateCheck] = await pool.query<RowDataPacket[]>(
+      'SELECT id FROM materials WHERE name = ? AND id != ?', 
       [name, id]
     );
     
@@ -86,12 +96,12 @@ export async function PUT(request: NextRequest) {
     }
     
     // Проверка использования в упаковках
-    const [usedInPackaging] = await pool.query(
-      'SELECT COUNT(*) AS count FROM packaging_types WHERE material = ?',
+    const [usedInPackaging] = await pool.query<CountResult[]>(
+      'SELECT COUNT(*) AS count FROM packaging_types WHERE material = ?', 
       [id]
     );
     
-    if (usedInPackaging && Array.isArray(usedInPackaging) && usedInPackaging[0].count > 0) {
+    if (isCountResultArray(usedInPackaging) && usedInPackaging[0].count > 0) {
       return NextResponse.json(
         { error: 'Нельзя редактировать материал, который используется в упаковках' },
         { status: 400 }
@@ -99,7 +109,11 @@ export async function PUT(request: NextRequest) {
     }
     
     // Обновление материала
-    await pool.query('UPDATE materials SET name = ? WHERE id = ?', [name, id]);
+    await pool.query(
+      'UPDATE materials SET name = ? WHERE id = ?', 
+      [name, id]
+    );
+    
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Ошибка обновления материала:', error);
@@ -116,20 +130,20 @@ export async function DELETE(request: NextRequest) {
     const url = new URL(request.url);
     const id = parseInt(url.searchParams.get('id') || '0');
     
-    if (!id) {
+    if (!id || Number.isNaN(id) || id <= 0) {
       return NextResponse.json(
-        { error: 'ID материала не указан' },
+        { error: 'Некорректный ID материала' },
         { status: 400 }
       );
     }
     
     // Проверка использования в упаковках
-    const [usedInPackaging] = await pool.query(
-      'SELECT COUNT(*) AS count FROM packaging_types WHERE material = ?',
+    const [usedInPackaging] = await pool.query<CountResult[]>(
+      'SELECT COUNT(*) AS count FROM packaging_types WHERE material = ?', 
       [id]
     );
     
-    if (usedInPackaging && Array.isArray(usedInPackaging) && usedInPackaging[0].count > 0) {
+    if (isCountResultArray(usedInPackaging) && usedInPackaging[0].count > 0) {
       return NextResponse.json(
         { error: 'Нельзя удалить материал, который используется в упаковках' },
         { status: 400 }

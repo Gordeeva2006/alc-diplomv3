@@ -18,6 +18,7 @@ interface FormData {
   phone: string;
 }
 
+// Изменено: Теперь используем Record<string, string | undefined> для поддержки поля form
 const RegisterPage = () => {
   const [formData, setFormData] = useState<FormData>({
     userType: 'individual',
@@ -32,12 +33,14 @@ const RegisterPage = () => {
     confirmPassword: '',
     phone: ''
   });
-
-  const [errors, setErrors] = useState<Partial<FormData>>({});
+  
+  // Исправление: Изменен тип на Record<string, string | undefined>
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  
   const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{9,}$/;
 
   const handleTypeChange = (type: 'individual' | 'legal_entity') => {
@@ -55,8 +58,8 @@ const RegisterPage = () => {
   };
 
   const validate = (): boolean => {
-    const newErrors: Partial<FormData> = {};
-
+    const newErrors: Record<string, string | undefined> = {};
+    
     // Общие проверки
     if (!formData.email) newErrors.email = 'Email обязателен';
     if (!formData.password) newErrors.password = 'Пароль обязателен';
@@ -64,33 +67,33 @@ const RegisterPage = () => {
     if (!formData.inn) newErrors.inn = 'ИНН обязателен';
     if (!formData.companyName) newErrors.companyName = 'Название компании обязательно';
     if (!formData.legalAddress) newErrors.legalAddress = 'Юридический адрес обязателен';
-
+    
     // Проверка email формата
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Неверный формат email';
     }
-
+    
     // Проверка пароля
     if (formData.password && !strongPasswordRegex.test(formData.password)) {
       newErrors.password = 'Пароль должен содержать: минимум 9 символов, заглавные/строчные латинские буквы, цифры и спецсимволы';
     }
-
+    
     // Проверка совпадения паролей
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Пароли не совпадают';
     }
-
+    
     // Для юридических лиц
     if (formData.userType === 'legal_entity') {
       if (!formData.ogrn) newErrors.ogrn = 'ОГРН обязателен';
       if (!formData.kpp) newErrors.kpp = 'КПП обязателен';
     }
-
+    
     // Для ИП
     if (formData.userType === 'individual') {
       if (!formData.ogrnip) newErrors.ogrnip = 'ОГРНИП обязателен';
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -98,8 +101,9 @@ const RegisterPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    
     setIsLoading(true);
-
+    
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -109,16 +113,16 @@ const RegisterPage = () => {
           phone: formData.phone.replace(/\D/g, '') // Очистка номера телефона
         })
       });
-
+      
       const responseData = await response.json();
-
+      
       if (!response.ok) {
         throw new Error(responseData.error || 'Ошибка регистрации');
       }
-
+      
       window.location.href = '/login'; // Перенаправление на страницу входа
-
     } catch (error: any) {
+      // Теперь это работает, так как errors поддерживает поле form
       setErrors(prev => ({ ...prev, form: error.message }));
     } finally {
       setIsLoading(false);
@@ -133,6 +137,7 @@ const RegisterPage = () => {
           <h2 className="text-2xl font-bold text-center text-white">
             Регистрация
           </h2>
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Тип пользователя */}
             <div>
@@ -145,7 +150,7 @@ const RegisterPage = () => {
                 <option value="legal_entity">Юридическое лицо</option>
               </select>
             </div>
-
+            
             {/* Поля для юридических лиц */}
             {formData.userType === 'legal_entity' && (
               <>
@@ -177,7 +182,7 @@ const RegisterPage = () => {
                 </div>
               </>
             )}
-
+            
             {/* Общие поля */}
             <div className="relative">
               <input 
@@ -189,6 +194,7 @@ const RegisterPage = () => {
               />
               {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
             </div>
+            
             <div className="relative">
               <input 
                 type="tel"
@@ -199,6 +205,7 @@ const RegisterPage = () => {
               />
               {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
             </div>
+            
             <div className="relative">
               <input 
                 type="text"
@@ -212,7 +219,7 @@ const RegisterPage = () => {
               />
               {errors.inn && <p className="text-red-500 text-sm mt-1">{errors.inn}</p>}
             </div>
-
+            
             {/* Поля для ИП */}
             {formData.userType === 'individual' && (
               <div className="relative">
@@ -229,7 +236,7 @@ const RegisterPage = () => {
                 {errors.ogrnip && <p className="text-red-500 text-sm mt-1">{errors.ogrnip}</p>}
               </div>
             )}
-
+            
             {/* Юридический адрес */}
             <div className="relative">
               <input 
@@ -241,7 +248,7 @@ const RegisterPage = () => {
               />
               {errors.legalAddress && <p className="text-red-500 text-sm mt-1">{errors.legalAddress}</p>}
             </div>
-
+            
             {/* Email */}
             <div className="relative">
               <input 
@@ -253,7 +260,7 @@ const RegisterPage = () => {
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
-
+            
             {/* Пароль */}
             <div className="relative">
               <input 
@@ -282,7 +289,7 @@ const RegisterPage = () => {
               </button>
               {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
             </div>
-
+            
             {/* Подтверждение пароля */}
             <div className="relative">
               <input 
@@ -311,7 +318,7 @@ const RegisterPage = () => {
               </button>
               {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
             </div>
-
+            
             {/* Кнопка регистрации */}
             <button 
               type="submit"
@@ -322,17 +329,17 @@ const RegisterPage = () => {
             >
               {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
             </button>
-
+            
             {/* Ссылка на вход */}
             <div className="mt-4 text-center text-[var(--color-gray)]">
               Уже есть аккаунт?{' '}
-              <Link href="/auth/login" className="text-[var(--color-accent)] hover:underline">
+              <Link href="/login" className="text-[var(--color-accent)] hover:underline">
                 Войти
               </Link>
             </div>
-
+            
             {/* Глобальная ошибка */}
-            {errors.form && <p className="text-red-500 text-sm text-center">{errors.form}</p>}
+            {errors.form && <p className="text-red-500 text-sm text-center mt-4">{errors.form}</p>}
           </form>
         </div>
       </div>
