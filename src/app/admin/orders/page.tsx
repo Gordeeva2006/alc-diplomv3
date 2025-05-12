@@ -497,7 +497,7 @@ export default function OrdersPage() {
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
                             {item.packaging_type_image ? (
-                              <img src={`/uploads/packaging/${item.packaging_type_image}`} alt="Упаковка" className="w-12 h-12 object-cover rounded" />
+                              <img src={`/${item.packaging_type_image}`} alt="Упаковка" className="w-12 h-12 object-cover rounded" />
                             ) : 'Нет изображения'}
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-300 font-medium">

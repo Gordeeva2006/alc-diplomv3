@@ -263,7 +263,7 @@ export default function CatalogPage() {
                           value={selectedPackagings[product.id] || product.packagingOptions[0]?.id || ''}
                         >
                           {product.packagingOptions.map(pkg => (
-                            <option key={pkg.id} value={pkg.id}>
+                            <option className='text-black' key={pkg.id} value={pkg.id}>
                               {pkg.name} ({pkg.volume}{pkg.unit})
                             </option>
                           ))}
