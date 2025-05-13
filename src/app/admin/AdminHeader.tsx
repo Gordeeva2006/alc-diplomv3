@@ -95,6 +95,12 @@ export default function AdminHeader() {
               >
                 Заявки
               </Link>
+              <Link
+                href="/admin/questions"
+                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-white hover:text-[var(--color-accent)] transition-colors duration-200"
+              >
+                Вопросы
+              </Link>
             </div>
           </div>
 

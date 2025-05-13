@@ -18,6 +18,9 @@ export default withAuth(
         "/admin/dashboard": ["admin", "stmanager", "director", "manager"],
         "/admin/orders": ["admin", "stmanager", "director", "manager"],
         "/admin/packings": ["admin", "stmanager", "director", "manager"],
+        "/admin/categories": ["admin", "stmanager", "director", "manager"],
+        "/admin/users": ["admin", "stmanager", "director", "manager"],
+        "/admin/questions": ["admin", "stmanager", "director", "manager"],
         "/admin/products": ["admin", "stmanager", "director", "manager"]
       }
 
