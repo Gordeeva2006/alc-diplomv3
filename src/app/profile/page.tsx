@@ -1,4 +1,5 @@
 "use client"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
@@ -29,7 +30,6 @@ interface ClientData {
 interface UserData {
   id: string
   email: string
-  phone?: string | null
   role?: string
   client?: ClientData
 }
@@ -44,7 +44,6 @@ export default function ProfilePage() {
   
   // Состояния формы
   const [email, setEmail] = useState("")
-  const [userPhone, setUserPhone] = useState("")
   const [clientPhone, setClientPhone] = useState("")
   const [legalAddress, setLegalAddress] = useState("")
   const [clientType, setClientType] = useState<"individual" | "legal_entity">("individual")
@@ -55,6 +54,8 @@ export default function ProfilePage() {
   const [leCompany, setLeCompany] = useState("")
   const [leKpp, setLeKpp] = useState("")
   const [leOgrn, setLeOgrn] = useState("")
+  
+  // Пароли
   const [oldPassword, setOldPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -69,16 +70,18 @@ export default function ProfilePage() {
     if (status === "authenticated" && session?.user) {
       const userData = session.user as UserData
       setEmail(userData.email || "")
-      setUserPhone(formatPhoneForFrontend(userData.phone || ""))
+      
       if (userData.client) {
         setClientPhone(formatPhoneForFrontend(userData.client.phone || ""))
         setLegalAddress(userData.client.legalAddress || "")
         setClientType(userData.client.type)
+        
         if (userData.client.type === "individual" && userData.client.individual) {
           setIndInn(userData.client.individual.inn || "")
           setIndCompany(userData.client.individual.companyName || "")
           setIndOgrnip(userData.client.individual.ogrnip || "")
         }
+        
         if (userData.client.type === "legal_entity" && userData.client.legalEntity) {
           setLeInn(userData.client.legalEntity.inn || "")
           setLeCompany(userData.client.legalEntity.companyName || "")
@@ -96,6 +99,13 @@ export default function ProfilePage() {
     // Валидация email
     if (!email.trim()) newErrors.email = "Email обязателен"
     else if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Неверный формат email"
+    
+    // Валидация телефона клиента
+    if (!clientPhone.trim()) {
+      newErrors.clientPhone = "Телефон организации обязателен"
+    } else if (clientPhone.length < 10) {
+      newErrors.clientPhone = "Телефон должен содержать не менее 10 цифр"
+    }
     
     // Валидация юридического адреса
     if (!legalAddress.trim()) {
@@ -161,13 +171,13 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     if (!validateProfileFields()) return
     setSaving(true)
+    
     try {
       const response = await fetch("/api/user/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          phone: userPhone,
           client: {
             phone: clientPhone,
             legalAddress,
@@ -190,11 +200,13 @@ export default function ProfilePage() {
           }
         })
       })
+      
       if (!response.ok) {
         const errorData = await response.json()
         if (errorData.errors) setProfileErrors(errorData.errors)
         throw new Error("Ошибка сохранения данных")
       }
+      
       await update()
       alert("Данные профиля успешно обновлены")
     } catch (error: any) {
@@ -216,14 +228,18 @@ export default function ProfilePage() {
       alert("Пароли не совпадают")
       return
     }
+    
     setPasswordLoading(true)
+    
     try {
       const response = await fetch("/api/user/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ oldPassword, newPassword })
       })
+      
       if (!response.ok) throw new Error("Ошибка изменения пароля")
+      
       alert("Пароль успешно изменён")
       setOldPassword("")
       setNewPassword("")
@@ -249,12 +265,14 @@ export default function ProfilePage() {
       <CartProvider>
         <Header />
       </CartProvider>
+      
       <main className="flex-grow p-4 md:p-8 w-full">
         <div className="bg-[var(--color-dark)] p-6 rounded-lg shadow-lg max-w-7xl mx-auto">
           {/* Заголовок */}
           <h2 className="text-2xl font-bold mb-8 text-[var(--color-accent)] border-b border-[var(--color-gray)] pb-4">
             Профиль пользователя
           </h2>
+          
           {/* Основная информация */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
@@ -269,20 +287,8 @@ export default function ProfilePage() {
               />
               {profileErrors.email && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.email}</p>}
             </div>
-            <div>
-              <label className="block mb-2 text-sm font-medium text-gray-300">Телефон пользователя</label>
-              <input
-                type="tel"
-                value={userPhone}
-                maxLength={12}
-                onChange={(e) => setUserPhone(e.target.value)}
-                className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
-                  profileErrors.userPhone ? "border border-[var(--color-error)]" : ""
-                }`}
-              />
-              {profileErrors.userPhone && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.userPhone}</p>}
-            </div>
           </div>
+          
           {/* Тип клиента */}
           <div className="mb-8">
             <label className="block mb-3 text-sm font-medium text-gray-300">Тип клиента</label>
@@ -311,6 +317,7 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
+          
           {/* Общие данные клиента */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
@@ -319,13 +326,15 @@ export default function ProfilePage() {
                 type="tel"
                 value={clientPhone}
                 maxLength={12}
-                onChange={(e) => setClientPhone(e.target.value)}
+                onChange={(e) => setClientPhone(e.target.value.replace(/\D/g, ''))}
+                placeholder="10-12 цифр"
                 className={`w-full bg-[var(--color-gray)] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-all ${
                   profileErrors.clientPhone ? "border border-[var(--color-error)]" : ""
                 }`}
               />
               {profileErrors.clientPhone && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.clientPhone}</p>}
             </div>
+            
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-300">Юридический адрес</label>
               <input
@@ -339,6 +348,7 @@ export default function ProfilePage() {
               {profileErrors.legalAddress && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.legalAddress}</p>}
             </div>
           </div>
+          
           {/* Условные поля по типу клиента */}
           {clientType === "individual" ? (
             <>
@@ -357,6 +367,7 @@ export default function ProfilePage() {
                   />
                   {profileErrors.indInn && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.indInn}</p>}
                 </div>
+                
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-300">Компания</label>
                   <input
@@ -371,6 +382,7 @@ export default function ProfilePage() {
                   {profileErrors.indCompany && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.indCompany}</p>}
                 </div>
               </div>
+              
               <div className="mb-8">
                 <label className="block mb-2 text-sm font-medium text-gray-300">ОГРНИП</label>
                 <input
@@ -403,6 +415,7 @@ export default function ProfilePage() {
                   />
                   {profileErrors.leInn && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.leInn}</p>}
                 </div>
+                
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-300">Компания</label>
                   <input
@@ -417,6 +430,7 @@ export default function ProfilePage() {
                   {profileErrors.leCompany && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.leCompany}</p>}
                 </div>
               </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-300">КПП</label>
@@ -432,6 +446,7 @@ export default function ProfilePage() {
                   />
                   {profileErrors.leKpp && <p className="text-[var(--color-error)] text-sm mt-1">{profileErrors.leKpp}</p>}
                 </div>
+                
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-300">ОГРН</label>
                   <input
@@ -449,9 +464,11 @@ export default function ProfilePage() {
               </div>
             </>
           )}
+          
           {/* Изменение пароля */}
           <div className="border-t border-[var(--color-gray)] pt-8 mt-8">
             <h3 className="font-bold mb-6 text-lg text-[var(--color-accent)]">Изменить пароль</h3>
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-300">Старый пароль</label>
@@ -466,6 +483,7 @@ export default function ProfilePage() {
                 />
                 {passwordErrors.oldPassword && <p className="text-[var(--color-error)] text-sm mt-1">{passwordErrors.oldPassword}</p>}
               </div>
+              
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-300">Новый пароль</label>
                 <input
@@ -479,6 +497,7 @@ export default function ProfilePage() {
                 />
                 {passwordErrors.newPassword && <p className="text-[var(--color-error)] text-sm mt-1">{passwordErrors.newPassword}</p>}
               </div>
+              
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-300">Подтвердите пароль</label>
                 <input
@@ -493,6 +512,7 @@ export default function ProfilePage() {
                 {passwordErrors.confirmPassword && <p className="text-[var(--color-error)] text-sm mt-1">{passwordErrors.confirmPassword}</p>}
               </div>
             </div>
+            
             <button
               onClick={handleChangePassword}
               disabled={passwordLoading}
@@ -501,6 +521,7 @@ export default function ProfilePage() {
               {passwordLoading ? "Сохранение..." : "Сохранить пароль"}
             </button>
           </div>
+          
           {/* Кнопки управления */}
           <div className="mt-12 flex flex-wrap gap-4">
             <button
@@ -510,6 +531,7 @@ export default function ProfilePage() {
             >
               {saving ? "Сохранение..." : "Сохранить изменения"}
             </button>
+            
             <button
               onClick={() => signOut()}
               className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
@@ -519,6 +541,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </main>
+      
       <Footer />
     </div>
   )

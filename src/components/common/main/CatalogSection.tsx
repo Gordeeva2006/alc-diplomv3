@@ -352,12 +352,17 @@ export default function CatalogPage() {
         </div>
       </div>
       {isModalOpen && (
-        <div className="fixed inset-0 bg-dark bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
-        <div className="bg-[#C09D6A] p-6 rounded-lg shadow-white/30 text-center max-w-sm">
-          <p className="text-xl font-bold text-white">{modalMessage}</p>
-        </div>
-      </div>
-      )}
+          <div 
+            className="fixed bottom-4 left-0 right-0 z-50 animate-fadeIn"
+            style={{ animationDuration: '0.3s' }}
+          >
+            <div className="flex justify-center">
+              <div className="bg-[#C09D6A] p-6 rounded-lg shadow-white/30 text-center max-w-sm mx-auto transform transition-all animate__animated animate__fadeInUp">
+                <p className="text-xl font-bold text-white">{modalMessage}</p>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

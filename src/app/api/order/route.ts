@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
     if (totalAmount < MIN_ORDER_AMOUNT) {
       await connection.rollback();
       return NextResponse.json(
-        { error: `Минимальная сумма заказа ${MIN_ORDER_AMOUNT.toLocaleString()} ₽` },
+        { error: `Минимальная сумма заявки ${MIN_ORDER_AMOUNT.toLocaleString()} ₽` },
         { status: 400 }
       );
     }
@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
     return response;
 
   } catch (error: any) {
-    console.error("❌ Ошибка оформления заказа:", error.sqlMessage || error);
+    console.error("❌ Ошибка оформления заявки:", error.sqlMessage || error);
 
     if (connection) {
       await connection.rollback();
@@ -177,12 +177,12 @@ export async function POST(req: NextRequest) {
         await pool.query(`DELETE FROM order_items WHERE order_id = ?`, [orderId]);
         await pool.query(`DELETE FROM orders WHERE id = ?`, [orderId]);
       } catch (deleteError) {
-        console.error("Ошибка удаления заказа:", deleteError);
+        console.error("Ошибка удаления заявки:", deleteError);
       }
     }
 
     return NextResponse.json(
-      { error: "Не удалось оформить заказ" },
+      { error: "Не удалось оформить заявка" },
       { status: 500 }
     );
   } finally {

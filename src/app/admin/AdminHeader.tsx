@@ -93,7 +93,7 @@ export default function AdminHeader() {
                 href="/admin/orders"
                 className="inline-flex items-center px-1 pt-1 text-sm font-medium text-white hover:text-[var(--color-accent)] transition-colors duration-200"
               >
-                Заказы
+                Заявки
               </Link>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function AdminHeader() {
                 className="block pl-3 pr-4 py-2 text-base font-medium text-white hover:bg-[var(--color-gray)] hover:text-[var(--color-accent)]"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Заказы
+                заявки
               </Link>
               
               {session && (

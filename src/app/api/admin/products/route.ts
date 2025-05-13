@@ -235,7 +235,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    // Проверка связей с заказами
+    // Проверка связей с заявками
     const [orderCheck] = await pool.query<mysql.RowDataPacket[]>(
       `SELECT COUNT(*) as count FROM order_items WHERE product_id = ?`, 
       [productId]
@@ -243,7 +243,7 @@ export async function DELETE(request: NextRequest) {
     
     if ((orderCheck[0] as any).count > 0) {
       return NextResponse.json(
-        { error: 'Нельзя удалить продукт, который используется в заказах' }, 
+        { error: 'Нельзя удалить продукт, который используется в заявких' }, 
         { status: 400 }
       );
     }

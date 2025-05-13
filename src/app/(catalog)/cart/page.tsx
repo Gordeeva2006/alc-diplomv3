@@ -192,12 +192,12 @@ export default function CartPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Не удалось оформить заказ');
+        throw new Error(data.error || 'Не удалось оформить заявку');
       }
 
       setIsModalOpen(true);
     } catch (error) {
-      console.error('Ошибка оформления заказа:', error);
+      console.error('Ошибка оформления заявки:', error);
       alert(error instanceof Error ? error.message : 'Произошла ошибка');
     }
   };
@@ -401,14 +401,14 @@ export default function CartPage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-dark p-6 rounded-lg shadow-lg max-w-sm w-full">
-            <h2 className="text-xl font-bold mb-4">Заказ оформлен успешно!</h2>
+            <h2 className="text-xl font-bold mb-4">Заявка успешно оформлена!</h2>
             <div className="flex justify-between">
               <Link
                 href="/orders"
                 className="bg-accent text-white px-4 py-2 rounded hover:bg-opacity-90"
                 onClick={() => setIsModalOpen(false)}
               >
-                Перейти к заказам
+                Перейти к заявкам
               </Link>
               <button
                 onClick={() => setIsModalOpen(false)}

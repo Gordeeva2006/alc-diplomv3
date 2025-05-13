@@ -11,7 +11,7 @@ export async function GET(
     const { id } = await params;
 
     if (!id) {
-      return NextResponse.json({ error: "ID заказа не указан" }, { status: 400 });
+      return NextResponse.json({ error: "ID заявки не указан" }, { status: 400 });
     }
 
     // Получаем сессию пользователя
@@ -22,7 +22,7 @@ export async function GET(
 
     const currentClientId = session.user.client.id;
 
-    // Получаем заказ и client_id
+    // Получаем заявка и client_id
     const [orderRows]: any = await pool.query(
       `SELECT o.id, o.total_amount, o.status, o.created_at, c.id AS client_id, c.legal_address 
        FROM orders o
@@ -32,12 +32,12 @@ export async function GET(
     );
 
     if (orderRows.length === 0) {
-      return NextResponse.json({ error: "Заказ не найден" }, { status: 404 });
+      return NextResponse.json({ error: "Заявка не найден" }, { status: 404 });
     }
 
     const order = orderRows[0];
 
-    // Проверяем, принадлежит ли заказ текущему пользователю
+    // Проверяем, принадлежит ли заявка текущему пользователю
     if (order.client_id !== currentClientId) {
       return NextResponse.json({ error: "Доступ запрещён" }, { status: 403 });
     }
@@ -54,7 +54,7 @@ export async function GET(
 
     return NextResponse.json({ order, items }, { status: 200 });
   } catch (error) {
-    console.error("Ошибка получения заказа:", error);
+    console.error("Ошибка получения заявки:", error);
     return NextResponse.json({ error: "Не удалось загрузить данные" }, { status: 500 });
   }
 }

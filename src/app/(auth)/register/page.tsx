@@ -1,6 +1,7 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { IMaskInput } from 'react-imask';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 
@@ -16,10 +17,11 @@ interface FormData {
   password: string;
   confirmPassword: string;
   phone: string;
+  agreement: boolean;
 }
 
-// Изменено: Теперь используем Record<string, string | undefined> для поддержки поля form
 const RegisterPage = () => {
+  // Состояния
   const [formData, setFormData] = useState<FormData>({
     userType: 'individual',
     companyName: '',
@@ -31,23 +33,133 @@ const RegisterPage = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    phone: ''
+    phone: '',
+    agreement: false
   });
-  
-  // Исправление: Изменен тип на Record<string, string | undefined>
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
-  
+
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({
+    userType: undefined,
+    companyName: undefined,
+    inn: undefined,
+    ogrn: undefined,
+    ogrnip: undefined,
+    kpp: undefined,
+    legalAddress: undefined,
+    email: undefined,
+    password: undefined,
+    confirmPassword: undefined,
+    phone: undefined,
+    agreement: undefined,
+    form: undefined
+  });
+
+  const [touched, setTouched] = useState<Record<string, boolean>>({
+    userType: false,
+    companyName: false,
+    inn: false,
+    ogrn: false,
+    ogrnip: false,
+    kpp: false,
+    legalAddress: false,
+    email: false,
+    password: false,
+    confirmPassword: false,
+    phone: false,
+    agreement: false
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
-  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{9,}$/;
 
+  // Регулярное выражение для пароля
+  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{9,}$/;
+
+  // Функция валидации поля
+  const validateField = (name: string, value: string): string | undefined => {
+    switch (name) {
+      case 'email':
+        if (!value) return 'Email обязателен';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Неверный формат email';
+        return undefined;
+      case 'password':
+        if (!value) return 'Пароль обязателен';
+        if (!strongPasswordRegex.test(value)) return 'Пароль должен содержать: минимум 9 символов, заглавные/строчные латинские буквы, цифры и спецсимволы';
+        return undefined;
+      case 'confirmPassword':
+        if (!value) return 'Подтвердите пароль';
+        if (value !== formData.password) return 'Пароли не совпадают';
+        return undefined;
+      case 'phone':
+        if (!value) return 'Телефон обязателен';
+        const cleanedPhone = value.replace(/\D/g, '');
+        if (cleanedPhone.length !== 11) return 'Номер телефона должен содержать 11 цифр';
+        return undefined;
+      case 'inn':
+        if (!value) return 'ИНН обязателен';
+        if (value.replace(/\D/g, '').length !== 10) return 'ИНН должен содержать 10 цифр';
+        return undefined;
+      case 'ogrn':
+        if (formData.userType === 'legal_entity' && !value) return 'ОГРН обязателен';
+        if (formData.userType === 'legal_entity' && value.replace(/\D/g, '').length !== 13) return 'ОГРН должен содержать 13 цифр';
+        return undefined;
+      case 'kpp':
+        if (formData.userType === 'legal_entity' && !value) return 'КПП обязателен';
+        if (formData.userType === 'legal_entity' && value.replace(/\D/g, '').length !== 9) return 'КПП должен содержать 9 цифр';
+        return undefined;
+      case 'ogrnip':
+        if (formData.userType === 'individual' && !value) return 'ОГРНИП обязателен';
+        if (formData.userType === 'individual' && value.replace(/\D/g, '').length !== 15) return 'ОГРНИП должен содержать 15 цифр';
+        return undefined;
+      case 'companyName':
+        if (!value) return 'Название компании обязательно';
+        return undefined;
+      case 'legalAddress':
+        if (!value) return 'Юридический адрес обязателен';
+        return undefined;
+      case 'agreement':
+        if (!value) return 'Необходимо согласие на обработку данных';
+        return undefined;
+      default:
+        return undefined;
+    }
+  };
+
+  // Обработчики ввода
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setTouched(prev => ({ ...prev, [name]: true }));
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setFormData(prev => ({ ...prev, phone: value }));
+    setTouched(prev => ({ ...prev, phone: true }));
+  };
+
+  const handleNumericChange = (name: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setTouched(prev => ({ ...prev, [name]: true }));
+  };
+
+  // Обработчик для чекбокса
+  const handleAgreementChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, agreement: e.target.checked }));
+    setTouched(prev => ({ ...prev, agreement: true }));
+  };
+
+  // Смена типа пользователя
   const handleTypeChange = (type: 'individual' | 'legal_entity') => {
     setFormData(prev => ({
       ...prev,
       userType: type,
-      ...(type === 'legal_entity' ? { ogrnip: '' } : { ogrn: '', kpp: '' })
+      ...(type === 'legal_entity' ? { ogrnip: '', ogrn: '', kpp: '' } : { ogrn: '', kpp: '', ogrnip: '' })
+    }));
+    setTouched(prev => ({
+      ...prev,
+      ogrn: false,
+      kpp: false,
+      ogrnip: false
     }));
     setErrors(prev => ({
       ...prev,
@@ -57,72 +169,62 @@ const RegisterPage = () => {
     }));
   };
 
-  const validate = (): boolean => {
-    const newErrors: Record<string, string | undefined> = {};
-    
-    // Общие проверки
-    if (!formData.email) newErrors.email = 'Email обязателен';
-    if (!formData.password) newErrors.password = 'Пароль обязателен';
-    if (!formData.phone) newErrors.phone = 'Телефон обязателен';
-    if (!formData.inn) newErrors.inn = 'ИНН обязателен';
-    if (!formData.companyName) newErrors.companyName = 'Название компании обязательно';
-    if (!formData.legalAddress) newErrors.legalAddress = 'Юридический адрес обязателен';
-    
-    // Проверка email формата
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Неверный формат email';
-    }
-    
-    // Проверка пароля
-    if (formData.password && !strongPasswordRegex.test(formData.password)) {
-      newErrors.password = 'Пароль должен содержать: минимум 9 символов, заглавные/строчные латинские буквы, цифры и спецсимволы';
-    }
-    
-    // Проверка совпадения паролей
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Пароли не совпадают';
-    }
-    
-    // Для юридических лиц
-    if (formData.userType === 'legal_entity') {
-      if (!formData.ogrn) newErrors.ogrn = 'ОГРН обязателен';
-      if (!formData.kpp) newErrors.kpp = 'КПП обязателен';
-    }
-    
-    // Для ИП
-    if (formData.userType === 'individual') {
-      if (!formData.ogrnip) newErrors.ogrnip = 'ОГРНИП обязателен';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Валидация всех полей с debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const newErrors = { ...errors };
+      (Object.keys(formData) as Array<keyof FormData>).forEach(field => {
+        if (touched[field]) {
+          newErrors[field] = validateField(field, formData[field]);
+        }
+      });
+      setErrors(newErrors);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [formData, touched]);
 
+  // Отправка формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    
+    const allFields: Array<keyof FormData> = [
+      'userType', 'companyName', 'inn', 'ogrn', 'ogrnip', 'kpp',
+      'legalAddress', 'email', 'password', 'confirmPassword', 'phone', 'agreement'
+    ];
+    // Помечаем все поля как "потроганные"
+    const newTouched = allFields.reduce((acc, field) => {
+      acc[field] = true;
+      return acc;
+    }, {} as Record<keyof FormData, boolean>);
+    setTouched(newTouched);
+    // Валидация
+    const newErrors = allFields.reduce((acc, field) => {
+      acc[field] = validateField(field, formData[field]);
+      return acc;
+    }, {} as Record<keyof FormData, string | undefined>);
+    setErrors(newErrors);
+    // Если есть ошибки — не отправляем
+    if (Object.values(newErrors).some(error => error !== undefined)) return;
+    // Отправка данных
     setIsLoading(true);
-    
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          phone: formData.phone.replace(/\D/g, '') // Очистка номера телефона
+          phone: formData.phone.replace(/\D/g, ''),
+          inn: formData.inn.replace(/\D/g, ''),
+          ogrn: formData.ogrn.replace(/\D/g, ''),
+          ogrnip: formData.ogrnip.replace(/\D/g, ''),
+          kpp: formData.kpp.replace(/\D/g, '')
         })
       });
-      
       const responseData = await response.json();
-      
       if (!response.ok) {
         throw new Error(responseData.error || 'Ошибка регистрации');
       }
-      
-      window.location.href = '/login'; // Перенаправление на страницу входа
+      window.location.href = '/login';
     } catch (error: any) {
-      // Теперь это работает, так как errors поддерживает поле form
       setErrors(prev => ({ ...prev, form: error.message }));
     } finally {
       setIsLoading(false);
@@ -130,18 +232,16 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen grid grid-rows-[auto_1fr_auto]">
       <Header />
-      <div className="flex-grow flex justify-center items-center p-4">
-        <div className="bg-dark p-8 rounded-lg shadow-md w-full max-w-lg space-y-6 my-20">
-          <h2 className="text-2xl font-bold text-center text-white">
-            Регистрация
-          </h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid place-items-center p-4">
+        <div className="bg-dark p-8 rounded-lg shadow-md w-full max-w-lg duration-300 transition-all">
+          <h2 className="text-2xl font-bold text-center text-white mb-6">Регистрация</h2>
+          <form onSubmit={handleSubmit} className="grid gap-4">
             {/* Тип пользователя */}
             <div>
-              <select 
+              <select
+                name="userType"
                 value={formData.userType}
                 onChange={(e) => handleTypeChange(e.target.value as 'individual' | 'legal_entity')}
                 className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
@@ -150,124 +250,146 @@ const RegisterPage = () => {
                 <option value="legal_entity">Юридическое лицо</option>
               </select>
             </div>
-            
-            {/* Поля для юридических лиц */}
+
+            {/* Поля для юридического лица */}
             {formData.userType === 'legal_entity' && (
               <>
-                <div className="relative">
-                  <input 
-                    type="text"
-                    placeholder="ОГРН (13 цифр)"
+                <div>
+                  <IMaskInput
+                    mask="0000000000000" // 13 цифр
                     value={formData.ogrn}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      ogrn: e.target.value.replace(/\D/g, '').slice(0, 13) 
-                    })}
+                    onAccept={(value: string) => handleNumericChange('ogrn', value)}
+                    placeholder="ОГРН (13 цифр)"
                     className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                   />
-                  {errors.ogrn && <p className="text-red-500 text-sm mt-1">{errors.ogrn}</p>}
+                  {touched.ogrn && errors.ogrn && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.ogrn}
+                    </p>
+                  )}
                 </div>
-                <div className="relative">
-                  <input 
-                    type="text"
-                    placeholder="КПП (9 цифр)"
+                <div>
+                  <IMaskInput
+                    mask="000000000" // 9 цифр
                     value={formData.kpp}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      kpp: e.target.value.replace(/\D/g, '').slice(0, 9) 
-                    })}
+                    onAccept={(value: string) => handleNumericChange('kpp', value)}
+                    placeholder="КПП (9 цифр)"
                     className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                   />
-                  {errors.kpp && <p className="text-red-500 text-sm mt-1">{errors.kpp}</p>}
+                  {touched.kpp && errors.kpp && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.kpp}
+                    </p>
+                  )}
                 </div>
               </>
             )}
-            
+
             {/* Общие поля */}
-            <div className="relative">
-              <input 
+            <div>
+              <input
                 type="text"
+                name="companyName"
                 placeholder="Название компании"
                 value={formData.companyName}
-                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
-              {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
+              {touched.companyName && errors.companyName && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.companyName}
+                </p>
+              )}
             </div>
-            
-            <div className="relative">
-              <input 
-                type="tel"
-                placeholder="Номер телефона"
+
+            <div>
+              <IMaskInput
+                mask="+7(000) 000-00-00" // Обновленная маска для 11 цифр
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onAccept={handlePhoneChange}
+                placeholder="Номер телефона"
                 className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
-              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+              {touched.phone && errors.phone && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.phone}
+                </p>
+              )}
             </div>
-            
-            <div className="relative">
-              <input 
-                type="text"
-                placeholder="ИНН (10 цифр)"
+
+            <div>
+              <IMaskInput
+                mask="0000000000" // ИНН (10 цифр)
                 value={formData.inn}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  inn: e.target.value.replace(/\D/g, '').slice(0, 10) 
-                })}
+                onAccept={(value: string) => handleNumericChange('inn', value)}
+                placeholder="ИНН (10 цифр)"
                 className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
-              {errors.inn && <p className="text-red-500 text-sm mt-1">{errors.inn}</p>}
+              {touched.inn && errors.inn && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.inn}
+                </p>
+              )}
             </div>
-            
+
             {/* Поля для ИП */}
             {formData.userType === 'individual' && (
-              <div className="relative">
-                <input 
-                  type="text"
-                  placeholder="ОГРНИП (15 цифр)"
+              <div>
+                <IMaskInput
+                  mask="000000000000000" // ОГРНИП (15 цифр)
                   value={formData.ogrnip}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    ogrnip: e.target.value.replace(/\D/g, '').slice(0, 15) 
-                  })}
+                  onAccept={(value: string) => handleNumericChange('ogrnip', value)}
+                  placeholder="ОГРНИП (15 цифр)"
                   className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
                 />
-                {errors.ogrnip && <p className="text-red-500 text-sm mt-1">{errors.ogrnip}</p>}
+                {touched.ogrnip && errors.ogrnip && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.ogrnip}
+                  </p>
+                )}
               </div>
             )}
-            
-            {/* Юридический адрес */}
-            <div className="relative">
-              <input 
+
+            <div>
+              <input
                 type="text"
+                name="legalAddress"
                 placeholder="Юридический адрес"
                 value={formData.legalAddress}
-                onChange={(e) => setFormData({ ...formData, legalAddress: e.target.value })}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
-              {errors.legalAddress && <p className="text-red-500 text-sm mt-1">{errors.legalAddress}</p>}
+              {touched.legalAddress && errors.legalAddress && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.legalAddress}
+                </p>
+              )}
             </div>
-            
-            {/* Email */}
-            <div className="relative">
-              <input 
+
+            <div>
+              <input
                 type="email"
+                name="email"
                 placeholder="Email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)]"
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {touched.email && errors.email && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.email}
+                </p>
+              )}
             </div>
-            
+
             {/* Пароль */}
-            <div className="relative">
-              <input 
+            <div>
+              <input
                 type={showPassword ? 'text' : 'password'}
+                name="password"
                 placeholder="Пароль"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)] pr-10"
               />
               <button
@@ -283,20 +405,25 @@ const RegisterPage = () => {
                   </svg>
                 ) : (
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88L9.88 9.88m0 0l-.707.707M15.12 15.12l.707-.707M16.5 7.5v6m-3 0h3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
                   </svg>
                 )}
               </button>
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {touched.password && errors.password && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.password}
+                </p>
+              )}
             </div>
-            
+
             {/* Подтверждение пароля */}
-            <div className="relative">
-              <input 
+            <div>
+              <input
                 type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
                 placeholder="Подтвердите пароль"
                 value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-[var(--color-gray)] rounded bg-dark text-white focus:outline-none focus:border-[var(--color-accent)] pr-10"
               />
               <button
@@ -312,15 +439,40 @@ const RegisterPage = () => {
                   </svg>
                 ) : (
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88L9.88 9.88m0 0l-.707.707M15.12 15.12l.707-.707M16.5 7.5v6m-3 0h3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
                   </svg>
                 )}
               </button>
-              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+              {touched.confirmPassword && errors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.confirmPassword}
+                </p>
+              )}
             </div>
-            
+
+            {/* Согласие на обработку данных */}
+            <div className="grid grid-cols-[auto_1fr] items-center gap-x-2">
+              <input
+                type="checkbox"
+                checked={formData.agreement}
+                onChange={handleAgreementChange}
+                className="rounded text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+              />
+              <label htmlFor="agreement" className="text-sm text-[var(--color-gray)]">
+                Даю согласие на обработку
+                <a href="/policy" className="text-[var(--color-accent)] underline ml-1">
+                  Политики конфиденциальности
+                </a>
+              </label>
+            </div>
+            {touched.agreement && errors.agreement && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.agreement}
+              </p>
+            )}
+
             {/* Кнопка регистрации */}
-            <button 
+            <button
               type="submit"
               disabled={isLoading}
               className={`w-full bg-[var(--color-accent)] text-white py-2 px-4 rounded transition focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:ring-opacity-50 ${
@@ -329,7 +481,7 @@ const RegisterPage = () => {
             >
               {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
             </button>
-            
+
             {/* Ссылка на вход */}
             <div className="mt-4 text-center text-[var(--color-gray)]">
               Уже есть аккаунт?{' '}
@@ -337,9 +489,13 @@ const RegisterPage = () => {
                 Войти
               </Link>
             </div>
-            
+
             {/* Глобальная ошибка */}
-            {errors.form && <p className="text-red-500 text-sm text-center mt-4">{errors.form}</p>}
+            {errors.form && (
+              <p className="text-red-500 text-sm text-center mt-4">
+                {errors.form}
+              </p>
+            )}
           </form>
         </div>
       </div>

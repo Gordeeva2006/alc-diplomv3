@@ -9,23 +9,19 @@ export async function GET() {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Неавторизован" }, { status: 401 });
     }
-    
     const userId = parseInt(session.user.id);
-    
-    // Получаем clientId и тип клиента
+
     const [clientRows]: any = await pool.query(
       `SELECT id, type FROM clients WHERE user_id = ?`,
       [userId]
     );
-    
     if (clientRows.length === 0) {
       return NextResponse.json({ error: "Клиент не найден" }, { status: 404 });
     }
-    
+
     const clientId = clientRows[0].id;
     const clientType = clientRows[0].type;
 
-    // SQL-запрос с расширенными данными и статусами
     const [rows]: any = await pool.query(`
       SELECT 
         o.id AS order_id,
@@ -67,12 +63,9 @@ export async function GET() {
       WHERE o.client_id = ?
       ORDER BY o.created_at DESC`, [clientId]);
 
-    // Группировка товаров по заказам
     const ordersMap = new Map<number, any>();
-    
     for (const row of rows) {
       const orderId = row.order_id;
-      
       if (!ordersMap.has(orderId)) {
         ordersMap.set(orderId, {
           id: orderId,
@@ -94,14 +87,12 @@ export async function GET() {
           items: [],
         });
       }
-      
       const order = ordersMap.get(orderId)!;
       const pricePerGram = Number(row.price_per_gram);
       const packagingVolume = Number(row.packaging_volume);
       const quantity = row.quantity;
       const totalPricePerPackage = pricePerGram * packagingVolume * quantity;
-      
-      // Добавляем товар
+
       order.items.push({
         product_id: row.product_id,
         product_name: row.product_name,
@@ -113,14 +104,14 @@ export async function GET() {
         batch_volume: row.batch_volume,
         price_per_gram: pricePerGram,
         packaging_volume: packagingVolume,
-        totalPricePerPackage: totalPricePerPackage
+        totalPricePerPackage: totalPricePerPackage,
       });
     }
-    
+
     const orders = Array.from(ordersMap.values());
     return NextResponse.json(orders, { status: 200 });
   } catch (error) {
-    console.error("Ошибка получения списка заказов:", error);
-    return NextResponse.json({ error: "Не удалось получить список заказов" }, { status: 500 });
+    console.error("Ошибка получения списка заявок:", error);
+    return NextResponse.json({ error: "Не удалось получить список заявок" }, { status: 500 });
   }
 }

@@ -135,9 +135,8 @@ export async function GET(req: NextRequest) {
     // Выполняем основной запрос
     const [orders] = await pool.query<Order[]>(sql, params);
 
-    // Группировка товаров по заказам с информацией об упаковке
     const groupedOrders = orders.reduce((acc: Record<number, Order>, item) => {
-      // Создаем новый заказ, если он еще не в объекте
+
       if (!acc[item.id]) {
         acc[item.id] = {
           ...item,
@@ -146,7 +145,6 @@ export async function GET(req: NextRequest) {
         };
       }
 
-      // Добавляем товар в заказ, если он есть
       if (item.product_id) {
         acc[item.id].items!.push({
           product_id: item.product_id,
@@ -199,7 +197,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Ошибка при получении заказов:', {
+    console.error('Ошибка при получении заявок:', {
       message: error.message,
       stack: error.stack,
       code: error.code
@@ -220,18 +218,18 @@ export async function PUT(req: NextRequest) {
     
     const id = formData.get('id')?.toString();
     if (!id || isNaN(parseInt(id))) {
-      return NextResponse.json({ error: 'Неверный ID заказа' }, { status: 400 });
+      return NextResponse.json({ error: 'Неверный ID заявки' }, { status: 400 });
     }
     const orderId = parseInt(id);
     
-    // Проверка существования заказа
+    // Проверка существования заявки
     const [existingOrder] = await pool.query<{ id: number }[]>(
       'SELECT id FROM orders WHERE id = ?', 
       [orderId]
     );
     
     if (existingOrder.length === 0) {
-      // Создаем новый заказ
+      // Создаем новый заявка
       await pool.query(
         'INSERT INTO orders (id, status, client_id) VALUES (?, ?, ?)', 
         [orderId, 1, 1] // Укажите реальные данные клиента и статуса
@@ -385,7 +383,7 @@ export async function PUT(req: NextRequest) {
     
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Ошибка при обновлении заказа:', {
+    console.error('Ошибка при обновлении заявки:', {
       message: error.message,
       stack: error.stack
     });

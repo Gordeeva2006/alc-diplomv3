@@ -8,6 +8,6 @@ export const HEADER_LINKS = {
   menuItems: [
     { icon: "FaUser", text: "Профиль", href: "/profile" },
     { icon: "FaBox", text: "Продукция", href: "/products" },
-    { icon: "FaListUl", text: "Заказы", href: "/orders" }
+    { icon: "FaListUl", text: "Заявки", href: "/orders" }
   ]
 };

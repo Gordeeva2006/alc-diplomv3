@@ -81,7 +81,6 @@ export default function OrdersPage() {
     fetchStatuses();
   }, []);
 
-  // Загрузка заказов
   useEffect(() => {
     const fetchOrders = async () => {
       setIsLoading(true);
@@ -93,13 +92,13 @@ export default function OrdersPage() {
         if (statusFilter) url.searchParams.set('status', statusFilter);
         if (searchQuery) url.searchParams.set('search', searchQuery);
         const res = await fetch(url.toString());
-        if (!res.ok) throw new Error('Ошибка загрузки заказов');
+        if (!res.ok) throw new Error('Ошибка загрузки заявок');
         const data = await res.json();
         setOrders(data.data || []);
         setTotal(data.pagination?.total || 0);
       } catch (err: any) {
         console.error('Ошибка:', err.message);
-        setError('Не удалось загрузить заказы');
+        setError('Не удалось загрузить заявки');
       } finally {
         setIsLoading(false);
       }
@@ -167,7 +166,7 @@ export default function OrdersPage() {
         throw new Error(errorData.error || 'Не удалось сохранить изменения');
       }
 
-      // ✅ Принудительно обновляем данные заказа после сохранения
+      // ✅ Принудительно обновляем данные заявки после сохранения
       const updatedOrderRes = await fetch(`/api/admin/orders?search=${editingOrder.id}`);
       const updatedOrderData = await updatedOrderRes.json();
       const updatedOrder = updatedOrderData.data[0];
@@ -201,7 +200,7 @@ export default function OrdersPage() {
 
       if (!res.ok) throw new Error('Ошибка удаления договора');
 
-      // ✅ Обновляем данные заказа
+      // ✅ Обновляем данные заявки
       const updatedOrderRes = await fetch(`/api/admin/orders?search=${orderId}`);
       const updatedOrderData = await updatedOrderRes.json();
       const updatedOrder = updatedOrderData.data[0];
@@ -235,7 +234,7 @@ export default function OrdersPage() {
 
       if (!res.ok) throw new Error('Ошибка удаления сертификата');
 
-      // ✅ Обновляем данные заказа
+      // ✅ Обновляем данные заявки
       const updatedOrderRes = await fetch(`/api/admin/orders?search=${orderId}`);
       const updatedOrderData = await updatedOrderRes.json();
       const updatedOrder = updatedOrderData.data[0];
@@ -285,16 +284,16 @@ export default function OrdersPage() {
           {/* Заголовок */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-white)]">
-              Управление заказами
+              Управление заявками
             </h1>
-            <p className="text-[var(--color-gray)] mt-2">Просмотр и редактирование заказов клиентов</p>
+            <p className="text-[var(--color-gray)] mt-2">Просмотр и редактирование заявок клиентов</p>
           </div>
 
           {/* Фильтры и поиск */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4">
             <input
               type="text"
-              placeholder="Поиск по заказам..."
+              placeholder="Поиск по заявкам..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="px-4 py-2 border rounded bg-[var(--color-dark)] text-white border-[var(--color-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] flex-grow"
@@ -313,7 +312,7 @@ export default function OrdersPage() {
             </select>
           </div>
 
-          {/* Таблица заказов */}
+          {/* Таблица заявок */}
           <div className="overflow-x-auto rounded-lg shadow-lg">
             <table className="min-w-full bg-[var(--color-dark)] border border-[var(--color-gray)]">
               <thead className="bg-[var(--color-gray)]">
@@ -399,13 +398,13 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        {/* Модальное окно просмотра заказа */}
+        {/* Модальное окно просмотра заявки */}
         {viewingOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
             <div className="bg-[var(--color-dark)] p-6 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-start mb-6">
                 <h3 className="text-2xl font-bold text-[var(--color-accent)]">
-                  Просмотр заказа #{viewingOrder.id}
+                  Просмотр заявки #{viewingOrder.id}
                 </h3>
                 <button onClick={() => setViewingOrder(null)} className="text-gray-400 hover:text-white focus:outline-none">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -438,7 +437,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
                 <div className="bg-[var(--color-gray)] bg-opacity-20 p-4 rounded-lg">
-                  <h4 className="font-semibold text-lg text-white mb-3">Информация о заказе</h4>
+                  <h4 className="font-semibold text-lg text-white mb-3">Информация о заявке</h4>
                   <div className="space-y-2 text-gray-300">
                     <p><strong>Дата:</strong> {new Date(viewingOrder.created_at).toLocaleDateString('ru-RU')}</p>
                     <p><strong>Статус:</strong>
@@ -521,13 +520,13 @@ export default function OrdersPage() {
           </div>
         )}
 
-        {/* Модальное окно редактирования заказа */}
+        {/* Модальное окно редактирования заявки */}
         {editingOrder && (
           <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
             <div className="bg-[var(--color-dark)] p-6 rounded-lg shadow-xl w-full max-w-md">
               <div className="flex justify-between items-start mb-6">
                 <h3 className="text-2xl font-bold text-[var(--color-accent)]">
-                  Редактирование заказа #{editingOrder.id}
+                  Редактирование заявки #{editingOrder.id}
                 </h3>
                 <button onClick={() => setEditingOrder(null)} disabled={loading || deleting} className="text-gray-400 hover:text-white focus:outline-none disabled:opacity-50">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
