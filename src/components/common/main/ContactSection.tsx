@@ -6,7 +6,7 @@ import { IMaskInput } from 'react-imask';
 import ReCAPTCHA from 'react-google-recaptcha';
 import clsx from 'clsx';
 import toast, { Toaster } from 'react-hot-toast';
-import { FaTelegramPlane, FaWhatsapp, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
+import { FaTelegramPlane, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
 
 // Типы данных формы
 type FormData = {
@@ -21,7 +21,6 @@ const CONFIG = {
   recaptchaKey: '6LcfqTcrAAAAAI-ei4DszP03YmH-OezKPilCj-Iw',
   contacts: {
     telegram: 'https://t.me/daimon_off ',
-    whatsapp: 'https://wa.me/79519337369 ',
     phone: '+79519337369',
     email: 'ares-gd@yandex.ru'
   }
@@ -47,10 +46,9 @@ const ContactCard = ({ icon: Icon, title, href, isPhone = false }: any) => (
     href={isPhone ? `tel:${href}` : href}
     target={isPhone ? undefined : "_blank"}
     rel={isPhone ? undefined : "noopener noreferrer"}
-    className="bg-dark p-6 rounded-2xl text-center space-y-4 hover:bg-gray-800/50 transition-colors flex-1  flex flex-col items-center justify-center"
+    className="bg-dark p-2 md:p-6 rounded-2xl text-center space-y-4 hover:bg-gray-800/50 transition-colors flex-1  flex flex-col items-center justify-center"
   >
     <Icon className="text-accent text-5xl mx-auto" />
-    <p className="text-accent font-medium">{title}</p>
   </a>
 );
 
@@ -116,11 +114,11 @@ export default function ContactPage() {
   };
 
   return (
-    <section className="py-12 bg-background">
+    <section className="py-12 bg-background" id="contact">
       <Toaster position="top-right" />
       
       <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center text-accent mb-16" id="contact">
+        <h2 className="text-4xl font-bold text-center text-accent mb-16" >
           Есть вопрос? Задайте его нашей команде
         </h2>
 
@@ -232,11 +230,7 @@ export default function ContactPage() {
                   title="Telegram" 
                   href={CONFIG.contacts.telegram} 
                 />
-                <ContactCard 
-                  icon={FaWhatsapp} 
-                  title="WhatsApp" 
-                  href={CONFIG.contacts.whatsapp} 
-                />
+
                 <ContactCard 
                   icon={FaPhoneAlt} 
                   title="Позвонить" 
