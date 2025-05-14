@@ -48,7 +48,7 @@ const ContactCard = ({ icon: Icon, title, href, isPhone = false }: any) => (
     rel={isPhone ? undefined : "noopener noreferrer"}
     className="bg-dark p-2 md:p-6 rounded-2xl text-center space-y-4 hover:bg-gray-800/50 transition-colors flex-1  flex flex-col items-center justify-center"
   >
-    <Icon className="text-accent text-5xl mx-auto" />
+    <Icon className="text-accent text-4xl mx-auto" />
   </a>
 );
 
@@ -224,7 +224,7 @@ export default function ContactPage() {
             <div className="flex flex-col items-center ">
               <h3 className="text-2xl font-bold text-center text-accent mb-6">Наши контакты</h3>
               
-              <div className="flex md:grid  md:grid-cols-2 gap-6 w-full">
+              <div className="flex md:grid flex-wrap md:grid-cols-1 gap-6 w-full">
                 <ContactCard 
                   icon={FaTelegramPlane} 
                   title="Telegram" 

@@ -17,7 +17,7 @@ export async function GET(
     // Получаем сессию пользователя
     const session = await getServerSession(authOptions);
     if (!session?.user?.client?.id) {
-      return NextResponse.json({ error: "Неавторизован" }, { status: 401 });
+      return NextResponse.json({ error: "Пожалуйста авторизируйстель" }, { status: 401 });
     }
 
     const currentClientId = session.user.client.id;

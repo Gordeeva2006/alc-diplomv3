@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Неавторизован" }, { status: 401 });
+      return NextResponse.json({ error: "Пожалуйста авторизируйстель" }, { status: 401 });
     }
 
     const userId = parseInt(session.user.id, 10);

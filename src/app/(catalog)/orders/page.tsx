@@ -61,7 +61,7 @@ export default function OrdersPage() {
       try {
         const res = await fetch("/api/orders");
         if (res.status === 401) {
-          setError("Неавторизован");
+          setError("Пожалуйста авторизируйстель");
           router.push("/login");
           return;
         }

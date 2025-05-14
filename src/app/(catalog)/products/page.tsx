@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState, useMemo } from 'react';
 import { useCart } from '@/components/CartProvider';
 import Image from 'next/image';
@@ -48,7 +49,6 @@ export default function ProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
-
   const { addToCart } = useCart();
 
   // Функция для округления до 50
@@ -85,6 +85,11 @@ export default function ProductsPage() {
   // Добавление товара в корзину
   const handleAddToCart = async (product: Product) => {
     try {
+      // Проверяем наличие упаковок
+      if (!product.packagingOptions.length) {
+        throw new Error('Товар не имеет доступных вариантов упаковки');
+      }
+
       const selectedPkg = product.packagingOptions.find(
         (pkg) => pkg.id === selectedPackagings[product.id]
       ) || product.packagingOptions[0];
@@ -101,14 +106,12 @@ export default function ProductsPage() {
         quantity
       );
 
-      // Вызов addToCart из CartProvider
+      // Вызов addToCart с тремя аргументами, как в CatalogPage
       await addToCart(product.id, selectedPkg.id, quantity);
 
       // Открытие модального окна
       setModalMessage('Товар добавлен в корзину');
       setIsModalOpen(true);
-
-      // Закрытие через 3 секунды
       setTimeout(() => setIsModalOpen(false), 3000);
     } catch (error) {
       console.error('Ошибка добавления в корзину:', error);
@@ -120,8 +123,9 @@ export default function ProductsPage() {
 
   // Фильтрация товаров
   const filteredProducts = useMemo(() => {
-    const filtered = products.filter((product) =>
-      !selectedCategory || product.category_name === selectedCategory
+    const filtered = products.filter(
+      (product) =>
+        !selectedCategory || product.category_name === selectedCategory
     );
     return filtered.slice(0, 999);
   }, [products, selectedCategory]);
@@ -154,7 +158,6 @@ export default function ProductsPage() {
         const uniqueCategories = Array.from(
           new Set(data.map((p: Product) => p.category_name))
         ) as string[];
-
         setCategories(uniqueCategories);
 
         const initialQuantities = data.reduce(
@@ -167,11 +170,12 @@ export default function ProductsPage() {
           },
           {}
         );
-
         setSelectedQuantities(initialQuantities);
       } catch (err) {
         console.error('Ошибка загрузки товаров:', err);
-        setError('Не удалось загрузить продукцию. Попробуйте перезагрузить страницу.');
+        setError(
+          'Не удалось загрузить продукцию. Попробуйте перезагрузить страницу.'
+        );
       } finally {
         setIsLoading(false);
       }
@@ -189,7 +193,7 @@ export default function ProductsPage() {
   // Рендеринг
   if (isLoading)
     return (
-      <div className='flex flex-col min-h-screen'>
+      <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex justify-center items-center h-64 flex-grow">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C09D6A]"></div>
@@ -249,7 +253,6 @@ export default function ProductsPage() {
                 const selectedPackaging = product.packagingOptions.find(
                   (pkg) => pkg.id === selectedPackagings[product.id]
                 ) || product.packagingOptions[0];
-
                 const totalPrice = calculatePackagingPrice(
                   product.price_per_gram,
                   selectedPackaging,
@@ -283,7 +286,7 @@ export default function ProductsPage() {
                             value={selectedPackagings[product.id] || product.packagingOptions[0]?.id}
                           >
                             {product.packagingOptions.map((pkg) => (
-                              <option className='text-black' key={pkg.id} value={pkg.id}>
+                              <option className="text-black" key={pkg.id} value={pkg.id}>
                                 {pkg.name} ({pkg.volume}{pkg.unit})
                               </option>
                             ))}
@@ -292,14 +295,13 @@ export default function ProductsPage() {
                           {/* Модальное изображение упаковки */}
                           {activeSelectId === product.id && selectedPackaging?.image && (
                             <div className="absolute top-12 left-0 w-48 h-48 bg-white rounded-lg shadow-lg overflow-hidden z-50">
-                            <Image
-                              src={selectedPackaging.image}
-                              alt={selectedPackaging.name}
-                              fill
-                              style={{ objectFit: 'cover' }}
-                              unoptimized
-                            />
-
+                              <Image
+                                src={selectedPackaging.image}
+                                alt={selectedPackaging.name}
+                                fill
+                                style={{ objectFit: 'cover' }}
+                                unoptimized
+                              />
                             </div>
                           )}
                         </div>
@@ -357,16 +359,24 @@ export default function ProductsPage() {
                       <div className="mt-1">
                         <p className="font-light text-base text-white">
                           <span className="font-bold">Сумма за партию:</span>{' '}
-                          {totalPrice.toLocaleString()} <span className="text-lg font-light">₽</span>
+                          {totalPrice.toLocaleString()}{' '}
+                          <span className="text-lg font-light">₽</span>
                         </p>
                       </div>
 
                       {/* Кнопка добавления в корзину */}
                       <button
                         onClick={() => handleAddToCart(product)}
-                        className="w-full bg-[#C09D6A] text-white px-4 py-4 rounded-full hover:bg-[#8a693a] transition-colors"
+                        disabled={!product.packagingOptions.length}
+                        className={`w-full px-4 py-4 rounded-full transition-colors ${
+                          product.packagingOptions.length
+                            ? 'bg-[#C09D6A] text-white hover:bg-[#8a693a]'
+                            : 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                        }`}
                       >
-                        Добавить в заявку
+                        {product.packagingOptions.length
+                          ? 'Добавить в заявку'
+                          : 'Нет упаковок'}
                       </button>
                     </div>
                   </div>
@@ -383,17 +393,17 @@ export default function ProductsPage() {
 
       {/* Модальное окно */}
       {isModalOpen && (
-          <div 
-            className="fixed bottom-4 left-0 right-0 z-50 animate-fadeIn"
-            style={{ animationDuration: '0.3s' }}
-          >
-            <div className="flex justify-center">
-              <div className="bg-[#C09D6A] p-6 rounded-lg shadow-white/30 text-center max-w-sm mx-auto transform transition-all animate__animated animate__fadeInUp border-2 border-white">
-                <p className="text-xl font-bold text-white">{modalMessage}</p>
-              </div>
+        <div
+          className="fixed bottom-4 left-0 right-0 z-50 animate-fadeIn"
+          style={{ animationDuration: '0.3s' }}
+        >
+          <div className="flex justify-center">
+            <div className="bg-[#C09D6A] p-6 rounded-lg shadow-white/30 text-center max-w-sm mx-auto transform transition-all animate__animated animate__fadeInUp border-2 border-white">
+              <p className="text-xl font-bold text-white">{modalMessage}</p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
       <Footer />
     </div>

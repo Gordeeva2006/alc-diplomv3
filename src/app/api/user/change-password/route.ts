@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      return new Response(JSON.stringify({ error: "Неавторизован" }), {
+      return new Response(JSON.stringify({ error: "Пожалуйста авторизируйстель" }), {
         status: 401,
         headers: { "Content-Type": "application/json" }
       });

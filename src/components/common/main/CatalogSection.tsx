@@ -2,8 +2,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useCart } from '@/components/CartProvider';
 import Image from 'next/image';
-import Header from '@/components/common/Header';
-import Footer from '@/components/common/Footer';
 
 interface PackagingOption {
   id: number;

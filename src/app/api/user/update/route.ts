@@ -183,7 +183,7 @@ export async function GET(req: NextRequest) {
     console.info(`${LOG_PREFIX} [SESSION]`, session?.user ? "authenticated" : "unauthenticated");
     if (!session?.user) {
       console.warn(`${LOG_PREFIX} [UNAUTHORIZED]`);
-      return new Response(JSON.stringify({ error: "Неавторизован" }), {
+      return new Response(JSON.stringify({ error: "Пожалуйста авторизируйстель" }), {
         status: 401,
         headers: { "Content-Type": "application/json" }
       });
@@ -272,7 +272,7 @@ export async function PUT(req: NextRequest) {
     console.info(`${LOG_PREFIX} [SESSION]`, session?.user ? "authenticated" : "unauthenticated");
     if (!session?.user) {
       console.warn(`${LOG_PREFIX} [UNAUTHORIZED]`);
-      return new Response(JSON.stringify({ error: "Неавторизован" }), {
+      return new Response(JSON.stringify({ error: "Пожалуйста авторизируйстель" }), {
         status: 401,
         headers: { "Content-Type": "application/json" }
       });
